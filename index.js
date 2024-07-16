@@ -30,9 +30,29 @@ app.get("/", async (req, res) => {
 });
 
 app.post(`/createMerchant`, async (req, res) => {
-  const { fullname, username, phone, pageName, lat, long, debt } = req.body;
+  const {
+    fullname = "",
+    username = "",
+    phone = "",
+    pageName = "",
+    lat = "",
+    long = "",
+    debt = 0,
+    city = "",
+    password = "1",
+  } = req.body;
   const newMerchant = await prisma.Merchant.create({
-    data: { fullname, username, phone, pageName, lat, long, debt },
+    data: {
+      fullname,
+      username,
+      phone,
+      pageName,
+      lat,
+      long,
+      debt,
+      city,
+      password,
+    },
   });
   res.json(newMerchant);
 });

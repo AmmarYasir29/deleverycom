@@ -19,10 +19,12 @@ model Merchant {
   updatedAt DateTime @updatedAt
   fullname  String   @db.VarChar(300)
   username  String   @db.VarChar(20)
+  password  String
   phone     String
   pageName  String
   lat       String
   long      String
+  city      String
   debt      Float
   // author    User     @relation(fields: [authorId], references: [id])
   // authorId  Int
