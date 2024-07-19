@@ -1,13 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
+// To update DB
+// npx prisma migrate dev  --name init --create-only
+// npx prisma migrate deploy
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -26,18 +23,34 @@ model Merchant {
   long      String
   city      String
   debt      Float
-  // author    User     @relation(fields: [authorId], references: [id])
-  // authorId  Int
+  Order     Order[]
 }
 
 model Order {
-  id Int @id @default(autoincrement())
-
-  // user   User    @relation(fields: [userId], references: [id])
-  // userId Int     @unique
+  id            Int      @id @default(autoincrement())
+  customerName  String
+  customerPhone String
+  customerLat   String
+  customerLong  String
+  city          String
+  area          String
+  orderAmount   Float
+  orderCount    Int
+  orderType     Int
+  orderStatus   Int
+  notes         String
+  reason        String
+  merchant      Merchant @relation(fields: [merchantId], references: [id])
+  merchantId    Int
+  delegate      Delegate @relation(fields: [delegateId], references: [id])
+  delegateId    Int
 }
 
 model Delegate {
-  id   Int     @id @default(autoincrement())
-  name String?
+  id       Int     @id @default(autoincrement())
+  fullname String
+  username String  @db.VarChar(20)
+  password String
+  phone    String
+  Order    Order[]
 }

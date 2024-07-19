@@ -1,60 +1,53 @@
 const express = require("express");
-const app = express();
-const port = 3000;
-const { PrismaClient } = require("@prisma/client");
+const bodyParser = require("body-parser");
+const authRoute = require("./routes/auth.routes");
+const merchantRoute = require("./routes/merchant.routes");
+const delegateRoute = require("./routes/delegate.routes");
 
-const prisma = new PrismaClient();
+const port = process.env.PORT || 3000;
+const app = express();
+// app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+app.use("/api/auth", authRoute);
+app.use("/api/merchant", merchantRoute);
+app.use("/api/delegate", delegateRoute);
+// app.use("/api/admin", adminRouter);
+
+// app.use(ErrorHandler);
+
+// app.post(`/createMerchant`, async (req, res) => {
+//   const {
+//     fullname = "",
+//     username = "",
+//     phone = "",
+//     pageName = "",
+//     lat = "",
+//     long = "",
+//     debt = 0,
+//     city = "",
+//     password = "1",
+//   } = req.body;
+//   const newMerchant = await prisma.Merchant.create({
+//     data: {
+//       fullname,
+//       username,
+//       phone,
+//       pageName,
+//       lat,
+//       long,
+//       debt,
+//       city,
+//       password,
+//     },
+//   });
+//   res.json(newMerchant);
+// });
 
 app.get("/", async (req, res) => {
-  await prisma.user.create({
-    data: {
-      name: "Alice",
-      email: "alice2@prisma.io",
-      posts: {
-        create: { title: "Hello World" },
-      },
-      profile: {
-        create: { bio: "I like turtles" },
-      },
-    },
-  });
-
-  const allUsers = await prisma.user.findMany({
-    include: {
-      posts: true,
-      profile: true,
-    },
-  });
-  res.send(allUsers);
-});
-
-app.post(`/createMerchant`, async (req, res) => {
-  const {
-    fullname = "",
-    username = "",
-    phone = "",
-    pageName = "",
-    lat = "",
-    long = "",
-    debt = 0,
-    city = "",
-    password = "1",
-  } = req.body;
-  const newMerchant = await prisma.Merchant.create({
-    data: {
-      fullname,
-      username,
-      phone,
-      pageName,
-      lat,
-      long,
-      debt,
-      city,
-      password,
-    },
-  });
-  res.json(newMerchant);
+  res.send("worked!");
 });
 
 app.listen(port, () => {
