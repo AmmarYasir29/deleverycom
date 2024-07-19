@@ -3,6 +3,7 @@ generator client {
 }
 
 // To update DB
+// npx prisma generate
 // npx prisma migrate dev  --name init --create-only
 // npx prisma migrate deploy
 datasource db {
@@ -11,11 +12,11 @@ datasource db {
 }
 
 model Merchant {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  fullname  String   @db.VarChar(300)
-  username  String   @db.VarChar(20)
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  fullname  String    @db.VarChar(300)
+  username  String    @db.VarChar(20)
   password  String
   phone     String
   pageName  String
@@ -24,6 +25,7 @@ model Merchant {
   city      String
   debt      Float
   Order     Order[]
+  Invoice   Invoice[]
 }
 
 model Order {
@@ -48,9 +50,17 @@ model Order {
 
 model Delegate {
   id       Int     @id @default(autoincrement())
-  fullname String
+  fullname String  @db.VarChar(300)
   username String  @db.VarChar(20)
   password String
   phone    String
   Order    Order[]
+}
+
+model Invoice {
+  id         Int      @id @default(autoincrement())
+  amount     Float
+  date       DateTime @default(now())
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  merchantId Int
 }
