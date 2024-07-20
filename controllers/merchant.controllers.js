@@ -1,18 +1,24 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+var bcrypt = require("bcryptjs");
 
 const createMerchant = async (req, res) => {
   const {
     fullname = "",
-    username = "",
+    username,
     phone = "",
     pageName = "",
     lat = "",
     long = "",
     debt = 0,
     city = "",
-    password = "1",
+    password,
   } = req.body;
+  // usernaemExist = prisma.merchant.findUnique({ where: { username } });
+  // if (usernaemExist) return res.json(`username exist try others${usernaemExist}`);
+  const salt = await bcrypt.genSalt(10);
+  const cryptPassword = await bcrypt.hash(password, salt);
+
   const newMerchant = await prisma.Merchant.create({
     data: {
       fullname,
@@ -23,7 +29,7 @@ const createMerchant = async (req, res) => {
       long,
       debt,
       city,
-      password,
+      password: cryptPassword,
     },
   });
   res.json(newMerchant);

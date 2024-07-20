@@ -1,8 +1,9 @@
 const express = require("express");
 const merchantRoute = express.Router();
 const controllers = require("../controllers/merchant.controllers");
+const auth = require("../middleware/auth");
 
-merchantRoute.post("/create", controllers.createMerchant);
-merchantRoute.get("/displayAll", controllers.showMerchants);
+merchantRoute.post("/create", auth, controllers.createMerchant);
+merchantRoute.get("/displayAll", auth, controllers.showMerchants);
 
 module.exports = merchantRoute;
