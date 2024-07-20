@@ -11,7 +11,7 @@ const create = async (req, res) => {
     area = "",
     orderAmount = 0,
     orderCount = 0,
-    // notes = "",
+    notes = "",
     // reason = "",
     merchantId = 3,
   } = req.body;
@@ -28,7 +28,7 @@ const create = async (req, res) => {
       orderCount,
       orderStatus: 1,
       notes,
-      reason,
+      // reason,
       merchant: {
         connect: {
           id: merchantId,
