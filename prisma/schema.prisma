@@ -29,7 +29,7 @@ model Merchant {
 }
 
 model Order {
-  id            Int      @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   customerName  String
   customerPhone String
   customerLat   String
@@ -38,14 +38,13 @@ model Order {
   area          String
   orderAmount   Float
   orderCount    Int
-  orderType     Int
   orderStatus   Int
-  notes         String
-  reason        String
-  merchant      Merchant @relation(fields: [merchantId], references: [id])
+  notes         String?
+  reason        String?
+  merchant      Merchant  @relation(fields: [merchantId], references: [id])
   merchantId    Int
-  delegate      Delegate @relation(fields: [delegateId], references: [id])
-  delegateId    Int
+  delegate      Delegate? @relation(fields: [delegateId], references: [id])
+  delegateId    Int?
 }
 
 model Delegate {

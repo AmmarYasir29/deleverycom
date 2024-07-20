@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const authRoute = require("./routes/auth.routes");
 const merchantRoute = require("./routes/merchant.routes");
 const delegateRoute = require("./routes/delegate.routes");
+const orderRouter = require("./routes/order.routes");
 
 const port = process.env.PORT || 3000;
 const app = express();
@@ -14,7 +15,7 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoute);
 app.use("/api/merchant", merchantRoute);
 app.use("/api/delegate", delegateRoute);
-// app.use("/api/admin", adminRouter);
+app.use("/api/order", orderRouter);
 
 // app.use(ErrorHandler);
 

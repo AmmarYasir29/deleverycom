@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Order" ALTER COLUMN "notes" DROP NOT NULL,
+ALTER COLUMN "reason" DROP NOT NULL;
