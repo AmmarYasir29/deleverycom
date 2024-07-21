@@ -40,7 +40,24 @@ const showMerchants = async (req, res) => {
   res.json(users);
 };
 
+const showDebt = async (req, res) => {
+  const merchantId = parseInt(req.query.merchantId);
+  const totalDebt = await prisma.merchant.findUnique({
+    where: {
+      id: merchantId,
+    },
+    select: {
+      debt: true,
+    },
+  });
+  const detailsDebt = await prisma.invoice.findMany({
+    where: { merchantId: merchantId },
+  });
+  res.send({ ...totalDebt, ...detailsDebt });
+};
+
 module.exports = {
   createMerchant,
   showMerchants,
+  showDebt,
 };
