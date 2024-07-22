@@ -29,22 +29,23 @@ model Merchant {
 }
 
 model Order {
-  id            Int       @id @default(autoincrement())
-  customerName  String
-  customerPhone String
-  customerLat   String
-  customerLong  String
-  city          String
-  area          String
-  orderAmount   Float
-  orderCount    Int
-  orderStatus   Int
-  notes         String?
-  reason        String?
-  merchant      Merchant  @relation(fields: [merchantId], references: [id])
-  merchantId    Int
-  delegate      Delegate? @relation(fields: [delegateId], references: [id])
-  delegateId    Int?
+  id             Int       @id @default(autoincrement())
+  customerName   String
+  customerPhone  String
+  customerPhone2 String
+  customerLat    String
+  customerLong   String
+  city           String
+  area           String
+  orderAmount    Float
+  orderCount     Int
+  orderStatus    Int
+  notes          String?
+  reason         String?
+  merchant       Merchant  @relation(fields: [merchantId], references: [id])
+  merchantId     Int
+  delegate       Delegate? @relation(fields: [delegateId], references: [id])
+  delegateId     Int?
 }
 
 model Delegate {

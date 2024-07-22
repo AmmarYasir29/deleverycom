@@ -5,10 +5,13 @@ var bcrypt = require("bcryptjs");
 const createdelegate = async (req, res) => {
   const { username, password, fullname = "", phone = "" } = req.body;
 
-  // usernaemExist = prisma.delegate.findUnique({ where: { username } });
-  // if (usernaemExist) return res.json("username exist try others");
+  const usernaemExist = await prisma.delegate.count({
+    where: { username },
+  });
+  if (usernaemExist > 0) return res.json(`username exist try others`);
   const salt = await bcrypt.genSalt(10);
   const cryptPassword = await bcrypt.hash(password, salt);
+
   const newDelegate = await prisma.delegate.create({
     data: {
       username,

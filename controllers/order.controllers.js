@@ -5,6 +5,7 @@ const create = async (req, res) => {
   const {
     customerName = "",
     customerPhone = "",
+    customerPhone2 = "",
     customerLat = "",
     customerLong = "",
     city = "",
@@ -20,6 +21,7 @@ const create = async (req, res) => {
     data: {
       customerName,
       customerPhone,
+      customerPhone2,
       customerLat,
       customerLong,
       city,

@@ -14,8 +14,10 @@ const createMerchant = async (req, res) => {
     city = "",
     password,
   } = req.body;
-  // usernaemExist = prisma.merchant.findUnique({ where: { username } });
-  // if (usernaemExist) return res.json(`username exist try others${usernaemExist}`);
+  const usernaemExist = await prisma.merchant.count({
+    where: { username },
+  });
+  if (usernaemExist > 0) return res.json(`username exist try another`);
   const salt = await bcrypt.genSalt(10);
   const cryptPassword = await bcrypt.hash(password, salt);
 
@@ -50,14 +52,44 @@ const showDebt = async (req, res) => {
       debt: true,
     },
   });
-  const detailsDebt = await prisma.invoice.findMany({
-    where: { merchantId: merchantId },
+  const penddingOrder = await prisma.order.count({
+    where: { merchantId, orderStatus: 1 },
   });
-  res.send({ ...totalDebt, ...detailsDebt });
+  const assignedOrder = await prisma.order.count({
+    where: { merchantId, orderStatus: 2 },
+  });
+  const guaranteedOrder = await prisma.order.count({
+    where: { merchantId, orderStatus: 3 },
+  });
+  const deliverOrder = await prisma.order.count({
+    where: { merchantId, orderStatus: 4 },
+  });
+  const rejectedOrder = await prisma.order.count({
+    where: { merchantId, orderStatus: 5 },
+  });
+  res.send({
+    ...totalDebt,
+    penddingOrder,
+    assignedOrder,
+    guaranteedOrder,
+    deliverOrder,
+    rejectedOrder,
+  });
+};
+
+const showStatements = async (req, res) => {
+  const merchantId = parseInt(req.query.merchantId);
+
+  const detailsDebt = await prisma.invoice.findMany({
+    where: { merchantId },
+  });
+
+  res.json(detailsDebt);
 };
 
 module.exports = {
   createMerchant,
   showMerchants,
   showDebt,
+  showStatements,
 };
