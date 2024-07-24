@@ -37,6 +37,7 @@ model Order {
   customerLong   String
   city           String
   area           String
+  nearestPoint   String?
   orderAmount    Float
   orderCount     Int
   orderStatus    Int

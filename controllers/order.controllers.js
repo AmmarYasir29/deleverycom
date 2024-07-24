@@ -74,14 +74,20 @@ const getOrder = async (req, res) => {
 
 const OrdersBasedOnStatus = async (req, res) => {
   let status = parseInt(req.query.orderStatus);
-  let merchant = parseInt(req.query.orderMerchant);
+  let merchant;
+  if (req.user.role == 3) {
+    merchant = parseInt(req.query.orderMerchant); // super admin
+  } else if (req.user.role == 1) merchant = parseInt(req.user.id); // merchant
+
   if (status == 0) {
     if (merchant == 0) {
+      if (req.user.role != 3)
+        return res.json({ message: "request just for super ADMIN" });
       const orders = await prisma.order.findMany({
         include: { delegate: true, merchant: true },
       });
       return res.json(orders);
-    } else {
+    } else if (merchant != 0) {
       const orders = await prisma.order.findMany({
         where: {
           merchantId: merchant,
