@@ -10,15 +10,17 @@ const create = async (req, res) => {
     customerLong = "",
     city = "",
     area = "",
+    nearestPoint = "",
     orderAmount = 0,
     orderCount = 0,
     notes = "",
     // reason = "",
   } = req.body;
 
-  merchantId = 3; //parseInt(req.user);
-  console.log(merchantId);
-  console.log(parseInt(req.user));
+  if (req.user.role == 3) {
+    return res.json({ message: "create order just for merchant" }); // super admin
+  } else if (req.user.role == 1) merchantId = parseInt(req.user.id); // merchant
+
   const newOrder = await prisma.order.create({
     data: {
       customerName,
@@ -28,6 +30,7 @@ const create = async (req, res) => {
       customerLong,
       city,
       area,
+      nearestPoint,
       orderAmount,
       orderCount,
       orderStatus: 1,
