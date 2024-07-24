@@ -14,9 +14,11 @@ const create = async (req, res) => {
     orderCount = 0,
     notes = "",
     // reason = "",
-    merchantId = 3,
   } = req.body;
 
+  merchantId = 3; //parseInt(req.user);
+  console.log(merchantId);
+  console.log(parseInt(req.user));
   const newOrder = await prisma.order.create({
     data: {
       customerName,
@@ -72,19 +74,29 @@ const getOrder = async (req, res) => {
 
 const OrdersBasedOnStatus = async (req, res) => {
   let status = parseInt(req.query.orderStatus);
-  let Merchant = parseInt(req.query.orderMerchant);
+  let merchant = parseInt(req.query.orderMerchant);
   if (status == 0) {
-    const orders = await prisma.order.findMany({
-      include: { delegate: true, merchant: true },
-    });
-    res.json(orders);
+    if (merchant == 0) {
+      const orders = await prisma.order.findMany({
+        include: { delegate: true, merchant: true },
+      });
+      return res.json(orders);
+    } else {
+      const orders = await prisma.order.findMany({
+        where: {
+          merchantId: merchant,
+        },
+        include: { delegate: true, merchant: true },
+      });
+      return res.json(orders);
+    }
   } else {
     const orders = await prisma.order.findMany({
       where: {
         orderStatus: status,
-        merchantId: Merchant,
+        merchantId: merchant,
       },
-      include: { delegate: true },
+      include: { delegate: true, merchant: true },
     });
     res.json(orders);
   }
