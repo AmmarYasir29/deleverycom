@@ -4,7 +4,7 @@ const controllers = require("../controllers/order.controllers");
 const auth = require("../middleware/auth");
 
 orderRoute.post("/create", auth, controllers.create);
-orderRoute.get("/displayAll", auth, controllers.showOrders);
+// orderRoute.get("/displayAll", auth, controllers.showOrders);
 orderRoute.get("/getOrder", auth, controllers.getOrder);
 orderRoute.get("/orderStatus", auth, controllers.OrdersBasedOnStatus);
 orderRoute.put("/assignDelegate", auth, controllers.assignOrderDelegate);

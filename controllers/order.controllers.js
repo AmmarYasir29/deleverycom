@@ -46,15 +46,15 @@ const create = async (req, res) => {
   res.json(newOrder);
 };
 
-const showOrders = async (req, res) => {
-  const orders = await prisma.order.findMany({
-    include: {
-      merchant: true,
-      delegate: true,
-    },
-  });
-  res.json(orders);
-};
+// const showOrders = async (req, res) => {
+//   const orders = await prisma.order.findMany({
+//     include: {
+//       merchant: true,
+//       delegate: true,
+//     },
+//   });
+//   res.json(orders);
+// };
 
 const getOrder = async (req, res) => {
   orderId = parseInt(req.query.orderId);
@@ -73,24 +73,21 @@ const getOrder = async (req, res) => {
 const OrdersBasedOnStatus = async (req, res) => {
   let status = parseInt(req.query.orderStatus);
   let Merchant = parseInt(req.query.orderMerchant);
-  // if(status == 0){
-  //   const orders = await prisma.order.findMany({
-  //     where: {
-  //       orderStatus: status,
-  //       merchantId: Merchant,
-  //     },
-  //     include: { delegate: true },
-  //   });
-  //   res.json(orders);
-  // }
-  const orders = await prisma.order.findMany({
-    where: {
-      orderStatus: status,
-      merchantId: Merchant,
-    },
-    include: { delegate: true },
-  });
-  res.json(orders);
+  if (status == 0) {
+    const orders = await prisma.order.findMany({
+      include: { delegate: true, merchant: true },
+    });
+    res.json(orders);
+  } else {
+    const orders = await prisma.order.findMany({
+      where: {
+        orderStatus: status,
+        merchantId: Merchant,
+      },
+      include: { delegate: true },
+    });
+    res.json(orders);
+  }
 };
 
 const assignOrderDelegate = async (req, res) => {
@@ -161,7 +158,7 @@ const orderRejected = async (req, res) => {
 };
 module.exports = {
   create,
-  showOrders,
+  // showOrders,
   getOrder,
   OrdersBasedOnStatus,
   assignOrderDelegate,
