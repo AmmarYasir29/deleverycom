@@ -41,25 +41,35 @@ const createMerchant = async (req, res) => {
 
 const showMerchants = async (req, res) => {
   let users;
-  let city = req.query.delegateCity ? req.query.delegateCity : "";
-  let name = req.query.delegateName ? req.query.delegateName : "";
+  let city = req.query.merchantCity ? req.query.merchantCity : "";
+  let name = req.query.merchantName ? req.query.merchantName : "";
   if (city != "") {
-    users = await prisma.delegate.findMany({
+    users = await prisma.merchant.findMany({
       where: {
-        city,
+        city: {
+          contains: city,
+          // search: city,
+        },
       },
     });
   } else if (name != "") {
     users = await prisma.merchant.findMany({
       where: {
-        fullname: name,
+        fullname: {
+          contains: name,
+        },
       },
     });
   } else if (name != "" && city != "") {
     users = await prisma.merchant.findMany({
       where: {
-        fullname: name,
-        city,
+        fullname: {
+          contains: name,
+        },
+        city: {
+          contains: city,
+          // search: city,
+        },
       },
     });
   } else {

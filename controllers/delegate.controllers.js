@@ -46,7 +46,9 @@ const showdelegate = async (req, res) => {
   if (name != "") {
     users = await prisma.delegate.findMany({
       where: {
-        fullname: name,
+        fullname: {
+          contains: name,
+        },
       },
     });
   } else {

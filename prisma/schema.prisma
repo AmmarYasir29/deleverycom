@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
 }
 
 // To update DB
@@ -59,6 +60,13 @@ model Delegate {
   city     String
   area     String
   Order    Order[]
+}
+
+model Super {
+  id       Int    @id @default(autoincrement())
+  fullname String @db.VarChar(300)
+  username String @unique @db.VarChar(20)
+  password String
 }
 
 model Invoice {

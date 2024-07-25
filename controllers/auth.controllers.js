@@ -24,17 +24,18 @@ const login = async (req, res) => {
     user = await prisma.delegate.findUnique({
       where: { username },
     });
-
     if (!user) return res.status(400).json({ message: "Delegate Not Exist" });
     role = 2;
   } else if (loginType == 3) {
-    // Delegate Login
-    user = { username: "admin", id: 1, password: "123" };
-    if (!user) return res.status(400).json({ message: "Delegate Not Exist" });
+    user = await prisma.super.findUnique({
+      where: { username },
+    });
+    if (!user)
+      return res.status(400).json({ message: "Super admin Not Exist" });
     role = 3;
   }
-  // const isMatch = await bcrypt.compare(password, user.password);
-  // !isMatch && res.status(404).json({ message: "Incorrect Password !" });
+  const isMatch = await bcrypt.compare(password, user.password);
+  !isMatch && res.status(404).json({ message: "Incorrect Password !" });
   const payload = {
     user: {
       id: user.id,
