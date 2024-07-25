@@ -3,7 +3,14 @@ const prisma = new PrismaClient();
 var bcrypt = require("bcryptjs");
 
 const createdelegate = async (req, res) => {
-  const { username, password, fullname = "", phone = "" } = req.body;
+  const {
+    username,
+    password,
+    fullname = "",
+    phone = "",
+    city = "",
+    area = "",
+  } = req.body;
 
   const usernaemExist = await prisma.delegate.count({
     where: { username },
@@ -18,6 +25,8 @@ const createdelegate = async (req, res) => {
       password: cryptPassword,
       phone,
       fullname,
+      city,
+      area,
     },
   });
   res.json(newDelegate);

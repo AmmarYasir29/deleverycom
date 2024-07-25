@@ -13,6 +13,7 @@ const createMerchant = async (req, res) => {
     debt = 0,
     city = "",
     password,
+    area = "",
   } = req.body;
   const usernaemExist = await prisma.merchant.count({
     where: { username },
@@ -31,6 +32,7 @@ const createMerchant = async (req, res) => {
       long,
       debt,
       city,
+      area,
       password: cryptPassword,
     },
   });
