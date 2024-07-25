@@ -77,11 +77,20 @@ const getOrder = async (req, res) => {
 
 const OrdersBasedOnStatus = async (req, res) => {
   let status = parseInt(req.query.orderStatus);
+  let orderNumber = req.query.orderNumber ? parseInt(req.query.orderNumber) : 0;
   let merchant;
   if (req.user.role == 3) {
     merchant = parseInt(req.query.orderMerchant); // super admin
   } else if (req.user.role == 1) merchant = parseInt(req.user.id); // merchant
-
+  if (orderNumber != 0) {
+    const orders = await prisma.order.findUnique({
+      where: {
+        id: orderNumber,
+      },
+      include: { delegate: true, merchant: true },
+    });
+    return res.json(orders);
+  }
   if (status == 0) {
     if (merchant == 0) {
       if (req.user.role != 3)

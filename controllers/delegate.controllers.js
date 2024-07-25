@@ -24,7 +24,25 @@ const createdelegate = async (req, res) => {
 };
 
 const showdelegate = async (req, res) => {
-  const users = await prisma.delegate.findMany();
+  let users;
+  let city = req.query.delegateCity ? req.query.delegateCity : "";
+  let name = req.query.delegateName ? req.query.delegateName : "";
+  // if (city != "") {
+  //   users = await prisma.delegate.findMany({
+  //     where: {
+  //       city,
+  //     },
+  //   });
+  // } else
+  if (name != "") {
+    users = await prisma.delegate.findMany({
+      where: {
+        fullname: name,
+      },
+    });
+  } else {
+    users = await prisma.delegate.findMany();
+  }
   res.json(users);
 };
 

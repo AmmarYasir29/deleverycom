@@ -23,6 +23,7 @@ model Merchant {
   lat       String
   long      String
   city      String
+  area      String?
   debt      Float
   Order     Order[]
   Invoice   Invoice[]
@@ -55,6 +56,8 @@ model Delegate {
   username String  @unique @db.VarChar(20)
   password String
   phone    String
+  city     String
+  area     String
   Order    Order[]
 }
 
