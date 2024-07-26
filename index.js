@@ -7,6 +7,8 @@ const orderRoute = require("./routes/order.routes");
 const errorHandler = require("./middleware/errorMiddleware");
 const { tryCatch } = require("./helper/tryCatch");
 const AppError = require("./helper/AppError");
+const auth = require("./middleware/auth");
+
 const port = process.env.PORT || 3000;
 const app = express();
 // app.use(cors());
@@ -25,6 +27,7 @@ app.get(
 );
 
 app.use("/api/auth", authRoute);
+app.use(auth);
 app.use("/api/merchant", merchantRoute);
 app.use("/api/delegate", delegateRoute);
 app.use("/api/order", orderRoute);

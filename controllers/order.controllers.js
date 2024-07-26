@@ -128,7 +128,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         },
       },
     });
-    return res.json(orders);
+    return res.json(orders ? orders : []);
   }
   if (merchant == 0 && req.user.role != 3) {
     return res.json({ message: "request just for super ADMIN" });
