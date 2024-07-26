@@ -256,6 +256,8 @@ const OrdersBasedOnStatus = async (req, res) => {
 const assignOrderDelegate = async (req, res) => {
   let delegateId = parseInt(req.query.delegateId);
   let orderId = parseInt(req.query.orderId);
+  if (req.user.role != 3)
+    return res.json({ message: "assign order just for super admin" });
   try {
     const order = await prisma.order.update({
       where: { id: orderId },
@@ -273,6 +275,8 @@ const assignOrderDelegate = async (req, res) => {
 
 const guaranteeOrderDelegate = async (req, res) => {
   let orderId = parseInt(req.query.orderId);
+  if (req.user.role != 2)
+    return res.json({ message: "guarantee order just for delegate" });
   try {
     const order = await prisma.order.update({
       where: { id: orderId },
@@ -289,6 +293,8 @@ const guaranteeOrderDelegate = async (req, res) => {
 
 const orderDelivered = async (req, res) => {
   let orderId = parseInt(req.query.orderId);
+  if (req.user.role != 2)
+    return res.json({ message: "Delivered order just for delegate" });
   try {
     const order = await prisma.order.update({
       where: { id: orderId },
@@ -305,7 +311,8 @@ const orderDelivered = async (req, res) => {
 const orderRejected = async (req, res) => {
   let orderId = parseInt(req.query.orderId);
   let reason = parseInt(req.body.reason);
-
+  if (req.user.role != 2)
+    return res.json({ message: "Rejected order just for delegate" });
   try {
     const order = await prisma.order.update({
       where: { id: orderId },

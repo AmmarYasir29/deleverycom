@@ -36,18 +36,31 @@ const showdelegate = async (req, res) => {
   let users;
   let city = req.query.delegateCity ? req.query.delegateCity : "";
   let name = req.query.delegateName ? req.query.delegateName : "";
-  // if (city != "") {
-  //   users = await prisma.delegate.findMany({
-  //     where: {
-  //       city,
-  //     },
-  //   });
-  // } else
-  if (name != "") {
+  if (city != "") {
+    users = await prisma.delegate.findMany({
+      where: {
+        city: {
+          contains: city,
+        },
+      },
+    });
+  } else if (name != "") {
     users = await prisma.delegate.findMany({
       where: {
         fullname: {
           contains: name,
+        },
+      },
+    });
+  } else if (name != "" && city != "") {
+    users = await prisma.merchant.findMany({
+      where: {
+        fullname: {
+          contains: name,
+        },
+        city: {
+          contains: city,
+          // search: city,
         },
       },
     });
