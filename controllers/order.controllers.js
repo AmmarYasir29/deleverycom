@@ -76,12 +76,12 @@ const getOrder = async (req, res) => {
 };
 
 const OrdersBasedOnStatus = async (req, res) => {
-  let status = parseInt(req.query.orderStatus);
   let orderNumber = req.query.orderNumber ? parseInt(req.query.orderNumber) : 0;
+  let status = parseInt(req.query.orderStatus);
   let merchant;
-  if (req.user.role == 3) {
+  if (req.user.role == 3)
     merchant = parseInt(req.query.orderMerchant); // super admin
-  } else if (req.user.role == 1) merchant = parseInt(req.user.id); // merchant
+  else if (req.user.role == 1) merchant = parseInt(req.user.id); // merchant
   if (orderNumber != 0) {
     const orders = await prisma.order.findUnique({
       where: {
@@ -91,32 +91,126 @@ const OrdersBasedOnStatus = async (req, res) => {
     });
     return res.json(orders);
   }
-  if (status == 0) {
-    if (merchant == 0) {
-      if (req.user.role != 3)
-        return res.json({ message: "request just for super ADMIN" });
+  if (merchant == 0 && req.user.role != 3) {
+    return res.json({ message: "request just for super ADMIN" });
+  } else if (merchant == 0 && req.user.role == 3) {
+    if (status == 0) {
       const orders = await prisma.order.findMany({
-        include: { delegate: true, merchant: true },
+        include: {
+          delegate: {
+            select: {
+              fullname: true,
+              username: true,
+              phone: true,
+              city: true,
+              area: true,
+            },
+          },
+          merchant: {
+            select: {
+              fullname: true,
+              username: true,
+              phone: true,
+              pageName: true,
+              city: true,
+              area: true,
+              debt: true,
+            },
+          },
+        },
       });
       return res.json(orders);
-    } else if (merchant != 0) {
+    } else if (status != 0) {
+      const orders = await prisma.order.findMany({
+        where: {
+          orderStatus: status,
+        },
+        include: {
+          delegate: {
+            select: {
+              fullname: true,
+              username: true,
+              phone: true,
+              city: true,
+              area: true,
+            },
+          },
+          merchant: {
+            select: {
+              fullname: true,
+              username: true,
+              phone: true,
+              pageName: true,
+              city: true,
+              area: true,
+              debt: true,
+            },
+          },
+        },
+      });
+      return res.json(orders);
+    }
+  } else if (merchant != 0) {
+    if (status == 0) {
       const orders = await prisma.order.findMany({
         where: {
           merchantId: merchant,
         },
-        include: { delegate: true, merchant: true },
+        include: {
+          delegate: {
+            select: {
+              fullname: true,
+              username: true,
+              phone: true,
+              city: true,
+              area: true,
+            },
+          },
+          merchant: {
+            select: {
+              fullname: true,
+              username: true,
+              phone: true,
+              pageName: true,
+              city: true,
+              area: true,
+              debt: true,
+            },
+          },
+        },
       });
       return res.json(orders);
+    } else {
+      const orders = await prisma.order.findMany({
+        where: {
+          orderStatus: status,
+          merchantId: merchant,
+        },
+        include: {
+          delegate: {
+            select: {
+              fullname: true,
+              username: true,
+              phone: true,
+              city: true,
+              area: true,
+            },
+          },
+          merchant: {
+            select: {
+              fullname: true,
+              username: true,
+              phone: true,
+              pageName: true,
+              city: true,
+              area: true,
+              debt: true,
+            },
+          },
+        },
+      });
+      res.json(orders);
     }
-  } else {
-    const orders = await prisma.order.findMany({
-      where: {
-        orderStatus: status,
-        merchantId: merchant,
-      },
-      include: { delegate: true, merchant: true },
-    });
-    res.json(orders);
   }
 };
 
