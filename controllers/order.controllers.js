@@ -68,8 +68,26 @@ const getOrder = async (req, res) => {
       id: orderId,
     },
     include: {
-      merchant: true,
-      delegate: true,
+      delegate: {
+        select: {
+          fullname: true,
+          username: true,
+          phone: true,
+          city: true,
+          area: true,
+        },
+      },
+      merchant: {
+        select: {
+          fullname: true,
+          username: true,
+          phone: true,
+          pageName: true,
+          city: true,
+          area: true,
+          debt: true,
+        },
+      },
     },
   });
   res.json(order);
@@ -87,7 +105,28 @@ const OrdersBasedOnStatus = async (req, res) => {
       where: {
         id: orderNumber,
       },
-      include: { delegate: true, merchant: true },
+      include: {
+        delegate: {
+          select: {
+            fullname: true,
+            username: true,
+            phone: true,
+            city: true,
+            area: true,
+          },
+        },
+        merchant: {
+          select: {
+            fullname: true,
+            username: true,
+            phone: true,
+            pageName: true,
+            city: true,
+            area: true,
+            debt: true,
+          },
+        },
+      },
     });
     return res.json(orders);
   }
