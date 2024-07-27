@@ -43,6 +43,13 @@ const showdelegate = async (req, res) => {
           contains: city,
         },
       },
+      select: {
+        fullname: true,
+        username: true,
+        phone: true,
+        city: true,
+        area: true,
+      },
     });
   } else if (name != "") {
     users = await prisma.delegate.findMany({
@@ -50,6 +57,13 @@ const showdelegate = async (req, res) => {
         fullname: {
           contains: name,
         },
+      },
+      select: {
+        fullname: true,
+        username: true,
+        phone: true,
+        city: true,
+        area: true,
       },
     });
   } else if (name != "" && city != "") {
@@ -63,9 +77,24 @@ const showdelegate = async (req, res) => {
           // search: city,
         },
       },
+      select: {
+        fullname: true,
+        username: true,
+        phone: true,
+        city: true,
+        area: true,
+      },
     });
   } else {
-    users = await prisma.delegate.findMany();
+    users = await prisma.delegate.findMany({
+      select: {
+        fullname: true,
+        username: true,
+        phone: true,
+        city: true,
+        area: true,
+      },
+    });
   }
   res.json(users);
 };

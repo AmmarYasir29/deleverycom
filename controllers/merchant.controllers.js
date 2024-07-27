@@ -51,6 +51,17 @@ const showMerchants = async (req, res) => {
           // search: city,
         },
       },
+      select: {
+        fullname: true,
+        username: true,
+        phone: true,
+        city: true,
+        area: true,
+        pageName: true,
+        debt: true,
+        lat: true,
+        long: true,
+      },
     });
   } else if (name != "") {
     users = await prisma.merchant.findMany({
@@ -58,6 +69,17 @@ const showMerchants = async (req, res) => {
         fullname: {
           contains: name,
         },
+      },
+      select: {
+        fullname: true,
+        username: true,
+        phone: true,
+        city: true,
+        area: true,
+        pageName: true,
+        debt: true,
+        lat: true,
+        long: true,
       },
     });
   } else if (name != "" && city != "") {
@@ -71,9 +93,32 @@ const showMerchants = async (req, res) => {
           // search: city,
         },
       },
+      select: {
+        fullname: true,
+        username: true,
+        phone: true,
+        city: true,
+        area: true,
+        pageName: true,
+        debt: true,
+        lat: true,
+        long: true,
+      },
     });
   } else {
-    users = await prisma.merchant.findMany();
+    users = await prisma.merchant.findMany({
+      select: {
+        fullname: true,
+        username: true,
+        phone: true,
+        city: true,
+        area: true,
+        pageName: true,
+        debt: true,
+        lat: true,
+        long: true,
+      },
+    });
   }
   res.json(users);
 };
