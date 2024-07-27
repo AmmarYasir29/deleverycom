@@ -296,13 +296,33 @@ const orderDelivered = async (req, res) => {
   if (req.user.role != 2)
     return res.json({ message: "Delivered order just for delegate" });
   try {
-    const order = await prisma.order.update({
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+    });
+    const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
         orderStatus: 4,
       },
     });
-    res.json(order);
+    const merchant = await prisma.merchant.update({
+      where: { id: order.merchantId },
+      data: {
+        debt: { increment: order.orderAmount },
+      },
+    });
+    const invoice = await prisma.invoice.create({
+      data: {
+        amount: order.orderAmount,
+        type: 1,
+        merchant: {
+          connect: {
+            id: order.merchantId,
+          },
+        },
+      },
+    });
+    res.json({ order, merchant });
   } catch (error) {
     res.json({ error: error });
   }

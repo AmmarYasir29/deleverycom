@@ -158,6 +158,75 @@ const showDebt = async (req, res) => {
   });
 };
 
+const requestDebt = async (req, res) => {
+  const merchantId = parseInt(req.query.merchantId);
+  const updateMerchant = await prisma.merchant.update({
+    where: {
+      id: merchantId,
+    },
+    data: {
+      moneyReq: true,
+    },
+  });
+
+  res.json({ message: "requested succsufully" });
+};
+
+const showAllDebt = async (req, res) => {
+  const merchants = await prisma.merchant.findMany({
+    where: {
+      debt: {
+        gte: 0,
+      },
+    },
+    select: {
+      fullname: true,
+      username: true,
+      phone: true,
+      pageName: true,
+      lat: true,
+      long: true,
+      city: true,
+      area: true,
+      moneyReq: true,
+      debt: true,
+    },
+  });
+  res.json(merchants);
+};
+
+const givenDebt = async (req, res) => {
+  const merchantId = parseInt(req.query.merchantId);
+
+  const merchant = await prisma.merchant.findUnique({
+    where: {
+      id: merchantId,
+    },
+  });
+  const invoice = await prisma.invoice.create({
+    data: {
+      amount: merchant.debt,
+      type: 2,
+      merchant: {
+        connect: {
+          id: merchantId,
+        },
+      },
+    },
+  });
+
+  const merchantUpdate = await prisma.merchant.update({
+    where: {
+      id: merchantId,
+    },
+    data: {
+      moneyReq: false,
+      debt: 0,
+    },
+  });
+
+  res.json({ message: "Reset the debt succsufully" });
+};
 const showStatements = async (req, res) => {
   const merchantId = parseInt(req.query.merchantId);
 
@@ -173,4 +242,7 @@ module.exports = {
   showMerchants,
   showDebt,
   showStatements,
+  requestDebt,
+  showAllDebt,
+  givenDebt,
 };

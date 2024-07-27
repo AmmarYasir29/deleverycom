@@ -25,7 +25,8 @@ model Merchant {
   long      String
   city      String
   area      String?
-  debt      Float
+  moneyReq  Boolean   @default(false)
+  debt      Float     @default(0)
   Order     Order[]
   Invoice   Invoice[]
 }
@@ -73,6 +74,7 @@ model Invoice {
   id         Int      @id @default(autoincrement())
   amount     Float
   date       DateTime @default(now())
+  type       Int
   merchant   Merchant @relation(fields: [merchantId], references: [id])
   merchantId Int
 }
