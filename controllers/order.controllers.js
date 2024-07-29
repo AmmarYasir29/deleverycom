@@ -94,6 +94,9 @@ const getOrder = async (req, res) => {
 };
 
 const OrdersBasedOnStatus = async (req, res) => {
+  const take = parseInt(req.query.PAGE_SIZE) || 8;
+  const skip = parseInt(req.query.page_skip) || 0;
+
   let orderNumber = req.query.orderNumber ? parseInt(req.query.orderNumber) : 0;
   let status = parseInt(req.query.orderStatus);
   let merchant;
@@ -131,10 +134,15 @@ const OrdersBasedOnStatus = async (req, res) => {
     return res.json(orders ? orders : []);
   }
   if (merchant == 0 && req.user.role != 3) {
-    return res.json({ message: "request just for super ADMIN" });
+    return res.status(400).json({ message: "request just for super ADMIN" });
   } else if (merchant == 0 && req.user.role == 3) {
     if (status == 0) {
       const orders = await prisma.order.findMany({
+        take,
+        skip,
+        orderBy: {
+          id: "asc",
+        },
         include: {
           delegate: {
             select: {
@@ -158,7 +166,15 @@ const OrdersBasedOnStatus = async (req, res) => {
           },
         },
       });
-      return res.json(orders);
+      const total = await prisma.order.count();
+
+      return res.json({
+        data: orders,
+        metadata: {
+          hasNextPage: skip + take < total,
+          totalPages: Math.ceil(total / take),
+        },
+      });
     } else if (status != 0) {
       const orders = await prisma.order.findMany({
         where: {
