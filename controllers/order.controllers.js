@@ -177,6 +177,11 @@ const OrdersBasedOnStatus = async (req, res) => {
       });
     } else if (status != 0) {
       const orders = await prisma.order.findMany({
+        take,
+        skip,
+        orderBy: {
+          id: "asc",
+        },
         where: {
           orderStatus: status,
         },
@@ -203,11 +208,28 @@ const OrdersBasedOnStatus = async (req, res) => {
           },
         },
       });
-      return res.json(orders);
+      const total = await prisma.order.count({
+        where: {
+          orderStatus: status,
+        },
+      });
+
+      return res.json({
+        data: orders,
+        metadata: {
+          hasNextPage: skip + take < total,
+          totalPages: Math.ceil(total / take),
+        },
+      });
     }
   } else if (merchant != 0) {
     if (status == 0) {
       const orders = await prisma.order.findMany({
+        take,
+        skip,
+        orderBy: {
+          id: "asc",
+        },
         where: {
           merchantId: merchant,
         },
@@ -234,9 +256,26 @@ const OrdersBasedOnStatus = async (req, res) => {
           },
         },
       });
-      return res.json(orders);
+      const total = await prisma.order.count({
+        where: {
+          merchantId: merchant,
+        },
+      });
+
+      return res.json({
+        data: orders,
+        metadata: {
+          hasNextPage: skip + take < total,
+          totalPages: Math.ceil(total / take),
+        },
+      });
     } else {
       const orders = await prisma.order.findMany({
+        take,
+        skip,
+        orderBy: {
+          id: "asc",
+        },
         where: {
           orderStatus: status,
           merchantId: merchant,
@@ -264,7 +303,21 @@ const OrdersBasedOnStatus = async (req, res) => {
           },
         },
       });
-      res.json(orders);
+
+      const total = await prisma.order.count({
+        where: {
+          orderStatus: status,
+          merchantId: merchant,
+        },
+      });
+
+      res.json({
+        data: orders,
+        metadata: {
+          hasNextPage: skip + take < total,
+          totalPages: Math.ceil(total / take),
+        },
+      });
     }
   }
 };
