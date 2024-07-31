@@ -85,7 +85,6 @@ const getOrder = async (req, res) => {
           pageName: true,
           city: true,
           area: true,
-          debt: true,
         },
       },
     },
@@ -94,8 +93,10 @@ const getOrder = async (req, res) => {
 };
 
 const OrdersBasedOnStatus = async (req, res) => {
-  const take = parseInt(req.query.PAGE_SIZE) || 8;
-  const skip = parseInt(req.query.page_skip) || 0;
+  const take = parseInt(req.query.PAGE_SIZE) || 25;
+  const pageNumber = parseInt(req.query.pageNumber) || 0;
+
+  const skip = (pageNumber - 1) * take;
 
   let orderNumber = req.query.orderNumber ? parseInt(req.query.orderNumber) : 0;
   let status = parseInt(req.query.orderStatus);
@@ -126,7 +127,6 @@ const OrdersBasedOnStatus = async (req, res) => {
             pageName: true,
             city: true,
             area: true,
-            debt: true,
           },
         },
       },
@@ -161,7 +161,6 @@ const OrdersBasedOnStatus = async (req, res) => {
               pageName: true,
               city: true,
               area: true,
-              debt: true,
             },
           },
         },
@@ -203,7 +202,6 @@ const OrdersBasedOnStatus = async (req, res) => {
               pageName: true,
               city: true,
               area: true,
-              debt: true,
             },
           },
         },
@@ -251,7 +249,6 @@ const OrdersBasedOnStatus = async (req, res) => {
               pageName: true,
               city: true,
               area: true,
-              debt: true,
             },
           },
         },
@@ -298,7 +295,6 @@ const OrdersBasedOnStatus = async (req, res) => {
               pageName: true,
               city: true,
               area: true,
-              debt: true,
             },
           },
         },

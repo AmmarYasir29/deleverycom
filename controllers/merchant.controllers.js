@@ -229,13 +229,30 @@ const givenDebt = async (req, res) => {
   res.json({ message: "Reset the debt succsufully" });
 };
 const showStatements = async (req, res) => {
-  const merchantId = parseInt(req.query.merchantId);
+  const take = parseInt(req.query.PAGE_SIZE) || 25;
+  const pageNumber = parseInt(req.query.pageNumber) || 0;
 
+  const skip = (pageNumber - 1) * take;
+  const merchantId =
+    req.user.role == 1 ? req.user.id : parseInt(req.query.merchantId);
   const detailsDebt = await prisma.invoice.findMany({
-    where: { merchantId },
+    where: {
+      merchantId,
+    },
+    orderBy: {
+      date: "desc",
+    },
+    take: 20,
   });
+  const total = await prisma.order.count();
 
-  res.json(detailsDebt);
+  return res.json({
+    data: detailsDebt,
+    metadata: {
+      hasNextPage: skip + take < total,
+      totalPages: Math.ceil(total / take),
+    },
+  });
 };
 
 module.exports = {
