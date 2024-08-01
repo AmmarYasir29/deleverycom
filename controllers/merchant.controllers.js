@@ -125,7 +125,8 @@ const showMerchants = async (req, res) => {
 };
 
 const showDebt = async (req, res) => {
-  const merchantId = parseInt(req.query.merchantId);
+  const merchantId =
+    req.user.role == 1 ? req.user.id : parseInt(req.query.merchantId);
   const totalDebt = await prisma.merchant.findUnique({
     where: {
       id: merchantId,
@@ -160,7 +161,8 @@ const showDebt = async (req, res) => {
 };
 
 const requestDebt = async (req, res) => {
-  const merchantId = parseInt(req.query.merchantId);
+  const merchantId =
+    req.user.role == 1 ? req.user.id : parseInt(req.query.merchantId);
   const updateMerchant = await prisma.merchant.update({
     where: {
       id: merchantId,

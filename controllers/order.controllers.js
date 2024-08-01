@@ -62,6 +62,15 @@ const create = async (req, res) => {
 // };
 
 const getOrder = async (req, res) => {
+  if (req.user.role != 2)
+    return res.json({ message: "must be login as delegate" });
+
+  const delegate = await prisma.delegate.findUnique({
+    where: {
+      id: req.user.id,
+    },
+  });
+
   orderId = parseInt(req.query.orderId);
   const order = await prisma.order.findUnique({
     where: {
@@ -89,7 +98,9 @@ const getOrder = async (req, res) => {
       },
     },
   });
-  res.json(order);
+  if (!order) return res.json([]);
+  else if (delegate.id == order.delegateId) return res.json(order);
+  else return res.json({ message: "the order not belong to other delegate" });
 };
 
 const OrdersBasedOnStatus = async (req, res) => {
