@@ -91,6 +91,7 @@ const showdelegate = async (req, res) => {
   } else {
     users = await prisma.delegate.findMany({
       select: {
+        id: true,
         fullname: true,
         username: true,
         phone: true,
