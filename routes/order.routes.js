@@ -10,5 +10,7 @@ orderRoute.put("/assignDelegate", controllers.assignOrderDelegate);
 orderRoute.put("/guaranteeDelegate", controllers.guaranteeOrderDelegate);
 orderRoute.put("/delivered", controllers.orderDelivered);
 orderRoute.put("/rejected", controllers.orderRejected);
+orderRoute.put("/processOrder", controllers.processOrder);
+orderRoute.put("/revert", controllers.orderReverted);
 
 module.exports = orderRoute;

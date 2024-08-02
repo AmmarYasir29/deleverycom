@@ -60,6 +60,7 @@ const showdelegate = async (req, res) => {
         },
       },
       select: {
+        id: true,
         fullname: true,
         username: true,
         phone: true,
@@ -68,7 +69,7 @@ const showdelegate = async (req, res) => {
       },
     });
   } else if (name != "" && city != "") {
-    users = await prisma.merchant.findMany({
+    users = await prisma.delegate.findMany({
       where: {
         fullname: {
           contains: name,
@@ -79,6 +80,7 @@ const showdelegate = async (req, res) => {
         },
       },
       select: {
+        id: true,
         fullname: true,
         username: true,
         phone: true,

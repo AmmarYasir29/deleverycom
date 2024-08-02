@@ -72,6 +72,7 @@ const showMerchants = async (req, res) => {
         },
       },
       select: {
+        id: true,
         fullname: true,
         username: true,
         phone: true,
@@ -95,6 +96,7 @@ const showMerchants = async (req, res) => {
         },
       },
       select: {
+        id: true,
         fullname: true,
         username: true,
         phone: true,
@@ -109,6 +111,7 @@ const showMerchants = async (req, res) => {
   } else {
     users = await prisma.merchant.findMany({
       select: {
+        id: true,
         fullname: true,
         username: true,
         phone: true,

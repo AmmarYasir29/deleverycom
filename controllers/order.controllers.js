@@ -422,6 +422,36 @@ const orderRejected = async (req, res) => {
     res.json({ error: error });
   }
 };
+
+const processOrder = async (req, res) => {
+  let orderId = parseInt(req.query.orderId);
+  let newData = req.body;
+
+  const updatedOrder = await prisma.order.update({
+    where: { id: orderId },
+    data: newData,
+  });
+
+  return res.json(updatedOrder);
+};
+
+const orderReverted = async (req, res) => {
+  let orderId = parseInt(req.query.orderId);
+  if (req.user.role != 3)
+    return res.json({ message: "Reverted order just for admin" });
+  try {
+    const order = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        orderStatus: 6,
+      },
+    });
+    res.json(order);
+  } catch (error) {
+    res.json({ error: error });
+  }
+};
+
 module.exports = {
   create,
   // showOrders,
@@ -431,4 +461,6 @@ module.exports = {
   guaranteeOrderDelegate,
   orderDelivered,
   orderRejected,
+  processOrder,
+  orderReverted,
 };
