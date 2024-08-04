@@ -16,8 +16,8 @@ const create = async (req, res) => {
     notes = "",
     // reason = "",
   } = req.body;
-
-  if (req.user.role == 3) {
+  let merchantId;
+  if (req.user.role != 3) {
     return res.json({ message: "create order just for merchant" }); // super admin
   } else if (req.user.role == 1) merchantId = parseInt(req.user.id); // merchant
 

@@ -1,24 +1,40 @@
-const AppError = require("../helper/AppError");
+// const AppError = require("../helper/AppError");
+const PrismaError = require("../helper/PrismaError");
 
 const errorHandler = (error, req, res, next) => {
   //* custom error *//
-  if (error.name === "ValidationError") {
-    return req.status(400).send({
+
+  // console.log("before message " + error.errCode);
+  // let message;
+  // switch (error.errCode) {
+  //   case "1":
+  //     message = "new tet s";
+  //   case "2":
+  //     message = "neeeee";
+  //   default:
+  //     return error.message;
+  // }
+  // console.log(message);
+
+  if (error instanceof PrismaError) {
+    return res.status(error.statusCode).json({
       success: false,
-      type: "VaildationError",
-      details: error.details,
+      name: error.name,
+      message: error.message,
+      errCode: error.errCode,
     });
   }
 
   //* custom other error *//
-  if (error instanceof AppError) {
-    return res.status(error.statusCode).json({
-      errorCode: error.errorCode,
-    });
-  }
-
+  // if (error instanceof AppError) {
+  //   return res.status(error.statusCode).json({
+  //     success: false,
+  //     name: error.name,
+  //     message: error.message,
+  //   });
+  // }
   //* random error *//
-  return res.status(500).send(`something got wrong ${error.message}`);
+  return res.status(500).send(`something got wrong `);
 };
 
 module.exports = errorHandler;

@@ -1,8 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 var bcrypt = require("bcryptjs");
+const PrismaError = require("../helper/PrismaError");
+const AppError = require("../helper/AppError");
 
-const createdelegate = async (req, res) => {
+const createdelegate = async (req, res, next) => {
   const {
     username,
     password,
@@ -11,25 +13,31 @@ const createdelegate = async (req, res) => {
     city = "",
     area = "",
   } = req.body;
+  try {
+    const usernaemExist = await prisma.delegate.count({
+      where: { username },
+    });
+    // if (usernaemExist > 0)
+    // throw new AppError("APIError", "username exist try others", 1);
+    const salt = await bcrypt.genSalt(10);
+    const cryptPassword = await bcrypt.hash(password, salt);
 
-  const usernaemExist = await prisma.delegate.count({
-    where: { username },
-  });
-  if (usernaemExist > 0) return res.json(`username exist try others`);
-  const salt = await bcrypt.genSalt(10);
-  const cryptPassword = await bcrypt.hash(password, salt);
-
-  const newDelegate = await prisma.delegate.create({
-    data: {
-      username,
-      password: cryptPassword,
-      phone,
-      fullname,
-      city,
-      area,
-    },
-  });
-  res.json(newDelegate);
+    const newDelegate = await prisma.delegate.create({
+      data: {
+        username,
+        password: cryptPassword,
+        phone,
+        fullname,
+        city,
+        area,
+      },
+    });
+    res.json(newDelegate);
+  } catch (e) {
+    next(
+      new PrismaError(e.name, e.message, 400, (errCode = e.code || e.errorCode))
+    );
+  }
 };
 
 const showdelegate = async (req, res) => {
