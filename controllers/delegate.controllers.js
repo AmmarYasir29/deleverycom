@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 var bcrypt = require("bcryptjs");
 const PrismaError = require("../helper/PrismaError");
 const AppError = require("../helper/AppError");
+const errorCode = require("../helper/errorCode");
 
 const createdelegate = async (req, res, next) => {
   const {
@@ -34,9 +35,8 @@ const createdelegate = async (req, res, next) => {
     });
     res.json(newDelegate);
   } catch (e) {
-    next(
-      new PrismaError(e.name, e.message, 400, (errCode = e.code || e.errorCode))
-    );
+    let msg = errorCode(`${e.code || e.errorCode}`, "DB error not found");
+    next(new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode)));
   }
 };
 
