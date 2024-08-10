@@ -115,7 +115,7 @@ const OrdersBasedOnStatus = async (req, res) => {
     merchant = parseInt(req.query.orderMerchant); // super admin
   else if (req.user.role == 1) merchant = parseInt(req.user.id); // merchant
   if (orderNumber != 0) {
-    const orders = await prisma.order.findUnique({
+    const orders = await prisma.order.findMany({
       where: {
         id: orderNumber,
       },
@@ -141,7 +141,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         },
       },
     });
-    return res.json(orders ? orders : []);
+    return res.json(orders ? { data: orders } : []);
   }
   if (merchant == 0 && req.user.role != 3) {
     return res.status(400).json({ message: "request just for super ADMIN" });
