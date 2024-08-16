@@ -17,12 +17,40 @@ const create = async (req, res) => {
     // reason = "",
   } = req.body;
   let merchantId;
-  if (req.user.role != 3) {
-    return res.json({ message: "create order just for merchant" }); // super admin
+  if (req.user.role != 1) {
+    return res.json({ message: "create order just for merchant" });
   } else if (req.user.role == 1) merchantId = parseInt(req.user.id); // merchant
 
   const newOrder = await prisma.order.create({
     data: {
+      customerName,
+      customerPhone,
+      customerPhone2,
+      customerLat,
+      customerLong,
+      city,
+      area,
+      nearestPoint,
+      orderAmount,
+      orderCount,
+      orderStatus: 1,
+      notes,
+      // reason,
+      merchant: {
+        connect: {
+          id: merchantId,
+        },
+      },
+      // delegate: {
+      //   connect: {
+      //     id: 1, // Replace with the existing delegate ID you want to associate
+      //   },
+      // },
+    },
+  });
+  const orderHis = await prisma.orderHistory.create({
+    data: {
+      orderId: newOrder.id,
       customerName,
       customerPhone,
       customerPhone2,
@@ -440,6 +468,34 @@ const assignOrderDelegate = async (req, res) => {
       },
     });
 
+    const orderHis = await prisma.orderHistory.create({
+      data: {
+        orderId: order.id,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        customerPhone2: order.customerPhone2,
+        customerLat: order.customerLat,
+        customerLong: order.customerLong,
+        city: order.city,
+        area: order.area,
+        nearestPoint: order.nearestPoint,
+        orderAmount: order.orderAmount,
+        orderCount: order.orderCount,
+        orderStatus: 2,
+        notes: order.notes,
+        // reason,
+        merchant: {
+          connect: {
+            id: order.merchantId,
+          },
+        },
+        delegate: {
+          connect: {
+            id: delegateId,
+          },
+        },
+      },
+    });
     res.json(order);
   } catch (error) {
     res.json({ error: error });
@@ -455,6 +511,35 @@ const guaranteeOrderDelegate = async (req, res) => {
       where: { id: orderId },
       data: {
         orderStatus: 3,
+      },
+    });
+
+    const orderHis = await prisma.orderHistory.create({
+      data: {
+        orderId: order.id,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        customerPhone2: order.customerPhone2,
+        customerLat: order.customerLat,
+        customerLong: order.customerLong,
+        city: order.city,
+        area: order.area,
+        nearestPoint: order.nearestPoint,
+        orderAmount: order.orderAmount,
+        orderCount: order.orderCount,
+        orderStatus: 3,
+        notes: order.notes,
+        // reason,
+        merchant: {
+          connect: {
+            id: order.merchantId,
+          },
+        },
+        delegate: {
+          connect: {
+            id: order.delegateId,
+          },
+        },
       },
     });
 
@@ -495,6 +580,35 @@ const orderDelivered = async (req, res) => {
         },
       },
     });
+
+    const orderHis = await prisma.orderHistory.create({
+      data: {
+        orderId: order.id,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        customerPhone2: order.customerPhone2,
+        customerLat: order.customerLat,
+        customerLong: order.customerLong,
+        city: order.city,
+        area: order.area,
+        nearestPoint: order.nearestPoint,
+        orderAmount: order.orderAmount,
+        orderCount: order.orderCount,
+        orderStatus: 4,
+        notes: order.notes,
+        // reason,
+        merchant: {
+          connect: {
+            id: order.merchantId,
+          },
+        },
+        delegate: {
+          connect: {
+            id: order.delegateId,
+          },
+        },
+      },
+    });
     res.json({ order, merchant });
   } catch (error) {
     res.json({ error: error });
@@ -514,6 +628,35 @@ const orderRejected = async (req, res) => {
         reason,
       },
     });
+
+    const orderHis = await prisma.orderHistory.create({
+      data: {
+        orderId: order.id,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        customerPhone2: order.customerPhone2,
+        customerLat: order.customerLat,
+        customerLong: order.customerLong,
+        city: order.city,
+        area: order.area,
+        nearestPoint: order.nearestPoint,
+        orderAmount: order.orderAmount,
+        orderCount: order.orderCount,
+        orderStatus: 5,
+        notes: order.notes,
+        // reason,
+        merchant: {
+          connect: {
+            id: order.merchantId,
+          },
+        },
+        delegate: {
+          connect: {
+            id: order.delegateId,
+          },
+        },
+      },
+    });
     res.json(order);
   } catch (error) {
     res.json({ error: error });
@@ -523,12 +666,42 @@ const orderRejected = async (req, res) => {
 const processOrder = async (req, res) => {
   let orderId = parseInt(req.query.orderId);
   let newData = req.body;
+  if (req.user.role != 3)
+    return res.json({ message: "edit order just for admin" });
 
   const updatedOrder = await prisma.order.update({
     where: { id: orderId },
     data: newData,
   });
 
+  const orderHis = await prisma.orderHistory.create({
+    data: {
+      orderId: updatedOrder.id,
+      customerName: updatedOrder.customerName,
+      customerPhone: updatedOrder.customerPhone,
+      customerPhone2: updatedOrder.customerPhone2,
+      customerLat: updatedOrder.customerLat,
+      customerLong: updatedOrder.customerLong,
+      city: updatedOrder.city,
+      area: updatedOrder.area,
+      nearestPoint: updatedOrder.nearestPoint,
+      orderAmount: updatedOrder.orderAmount,
+      orderCount: updatedOrder.orderCount,
+      orderStatus: 2,
+      notes: updatedOrder.notes,
+      // reason,
+      merchant: {
+        connect: {
+          id: updatedOrder.merchantId,
+        },
+      },
+      delegate: {
+        connect: {
+          id: updatedOrder.delegateId,
+        },
+      },
+    },
+  });
   return res.json(updatedOrder);
 };
 
@@ -543,12 +716,84 @@ const orderReverted = async (req, res) => {
         orderStatus: 6,
       },
     });
+
+    const orderHis = await prisma.orderHistory.create({
+      data: {
+        orderId: order.id,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        customerPhone2: order.customerPhone2,
+        customerLat: order.customerLat,
+        customerLong: order.customerLong,
+        city: order.city,
+        area: order.area,
+        nearestPoint: order.nearestPoint,
+        orderAmount: order.orderAmount,
+        orderCount: order.orderCount,
+        orderStatus: 6,
+        notes: order.notes,
+        // reason,
+        merchant: {
+          connect: {
+            id: order.merchantId,
+          },
+        },
+        delegate: {
+          connect: {
+            id: order.delegateId,
+          },
+        },
+      },
+    });
     res.json(order);
   } catch (error) {
     res.json({ error: error });
   }
 };
 
+const orderHistory = async (req, res) => {
+  console.log(req.user.role);
+
+  if (req.user.role != 3) return res.json({ message: "must be admin" });
+
+  if (req.query.orderId == null)
+    return res.json({ message: "order id require" });
+  let orderId = parseInt(req.query.orderId);
+
+  const orderHis = await prisma.orderHistory.findMany({
+    where: {
+      orderId,
+    },
+    include: {
+      delegate: {
+        select: {
+          fullname: true,
+          // username: true,
+          phone: true,
+          city: true,
+          // area: true,
+        },
+      },
+      merchant: {
+        select: {
+          fullname: true,
+          // username: true,
+          phone: true,
+          // pageName: true,
+          city: true,
+          // area: true,
+        },
+      },
+    },
+    orderBy: [
+      {
+        createAt: "desc",
+      },
+    ],
+  });
+  if (!orderHis) return res.json([]);
+  return res.json(orderHis);
+};
 module.exports = {
   create,
   // showOrders,
@@ -560,4 +805,5 @@ module.exports = {
   orderRejected,
   processOrder,
   orderReverted,
+  orderHistory,
 };

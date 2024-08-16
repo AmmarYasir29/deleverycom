@@ -4,7 +4,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const login = async (req, res) => {
-  const { username, password, loginType } = req.body;
+  const { username, password, loginType, fcmToken = "" } = req.body;
   if (password.length < 3)
     return res.status(400).json({ Message: "Enter correct password" });
   let user;
@@ -30,9 +30,10 @@ const login = async (req, res) => {
     user = await prisma.super.findUnique({
       where: { username },
     });
-    if (!user)
-      return res.status(400).json({ message: "Super admin Not Exist" });
-    role = 3;
+
+    if (!user) return res.status(400).json({ message: "Not Exist" });
+    if (user.type == 3) role = 3; // admin
+    else if (user.type == 4) role = 4; //emp
   }
   const isMatch = await bcrypt.compare(password, user.password);
   !isMatch && res.status(404).json({ message: "Incorrect Password !" });
@@ -40,6 +41,7 @@ const login = async (req, res) => {
     user: {
       id: user.id,
       role,
+      fcmToken,
     },
   };
 
@@ -48,6 +50,7 @@ const login = async (req, res) => {
     res.status(200).json({ token, id: user.id });
   });
   // } catch (e) {
+  // res.json({ msg: e });
   //   res.status(501).json({
   //     message: "cerate user Error",
   //     err: e,

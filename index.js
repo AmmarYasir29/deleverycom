@@ -6,6 +6,7 @@ const delegateRoute = require("./routes/delegate.routes");
 const orderRoute = require("./routes/order.routes");
 const errorHandler = require("./middleware/errorMiddleware");
 const auth = require("./middleware/auth");
+const extraRoute = require("./routes/extra.routes");
 
 const port = process.env.PORT || 3000;
 const app = express();
@@ -19,6 +20,7 @@ app.use(auth);
 app.use("/api/merchant", merchantRoute);
 app.use("/api/delegate", delegateRoute);
 app.use("/api/order", orderRoute);
+app.use("/api/ohter", extraRoute);
 app.use(errorHandler);
 
 app.listen(port, () => {

@@ -14,22 +14,23 @@ datasource db {
 }
 
 model Merchant {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  fullname  String    @db.VarChar(300)
-  username  String    @unique @db.VarChar(20)
-  password  String
-  phone     String
-  pageName  String
-  lat       String
-  long      String
-  city      String
-  area      String?
-  moneyReq  Boolean   @default(false)
-  debt      Float     @default(0)
-  Order     Order[]
-  Invoice   Invoice[]
+  id           Int            @id @default(autoincrement())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  fullname     String         @db.VarChar(300)
+  username     String         @unique @db.VarChar(20)
+  password     String
+  phone        String
+  pageName     String
+  lat          String
+  long         String
+  city         String
+  area         String?
+  moneyReq     Boolean        @default(false)
+  debt         Float          @default(0)
+  Order        Order[]
+  Invoice      Invoice[]
+  OrderHistory OrderHistory[]
 }
 
 model Order {
@@ -51,17 +52,43 @@ model Order {
   merchantId     Int
   delegate       Delegate? @relation(fields: [delegateId], references: [id])
   delegateId     Int?
+  createAt       DateTime  @default(now())
+  updateAt       DateTime?
+}
+
+model OrderHistory {
+  id             Int       @id @default(autoincrement())
+  orderId        Int
+  customerName   String
+  customerPhone  String?
+  customerPhone2 String?
+  customerLat    String?
+  customerLong   String?
+  city           String?
+  area           String?
+  nearestPoint   String?
+  orderAmount    Float
+  orderCount     Int?
+  orderStatus    Int
+  notes          String?
+  reason         String?
+  merchant       Merchant  @relation(fields: [merchantId], references: [id])
+  merchantId     Int
+  delegate       Delegate? @relation(fields: [delegateId], references: [id])
+  delegateId     Int?
+  createAt       DateTime  @default(now())
 }
 
 model Delegate {
-  id       Int     @id @default(autoincrement())
-  fullname String  @db.VarChar(300)
-  username String  @unique @db.VarChar(20)
-  password String
-  phone    String
-  city     String
-  area     String
-  Order    Order[]
+  id           Int            @id @default(autoincrement())
+  fullname     String         @db.VarChar(300)
+  username     String         @unique @db.VarChar(20)
+  password     String
+  phone        String
+  city         String
+  area         String
+  Order        Order[]
+  OrderHistory OrderHistory[]
 }
 
 model Super {
@@ -69,6 +96,7 @@ model Super {
   fullname String @db.VarChar(300)
   username String @unique @db.VarChar(20)
   password String
+  type     Int
 }
 
 model Invoice {

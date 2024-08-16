@@ -18,6 +18,8 @@ const createdelegate = async (req, res, next) => {
     const usernaemExist = await prisma.delegate.count({
       where: { username },
     });
+    if (username.indexOf(" ") >= 0) return res.json("username have space");
+
     // if (usernaemExist > 0)
     // throw new AppError("APIError", "username exist try others", 1);
     const salt = await bcrypt.genSalt(10);

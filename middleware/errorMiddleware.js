@@ -34,7 +34,7 @@ const errorHandler = (error, req, res, next) => {
   //   });
   // }
   //* random error *//
-  return res.status(500).send(`something got wrong `);
+  return res.status(500).send(`something got wrong: ${error}`);
 };
 
 module.exports = errorHandler;

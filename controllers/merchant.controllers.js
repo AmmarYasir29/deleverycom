@@ -19,6 +19,7 @@ const createMerchant = async (req, res) => {
     where: { username },
   });
   if (usernaemExist > 0) return res.json(`username exist try another`);
+  if (username.indexOf(" ") >= 0) return res.json("username have space");
   const salt = await bcrypt.genSalt(10);
   const cryptPassword = await bcrypt.hash(password, salt);
 

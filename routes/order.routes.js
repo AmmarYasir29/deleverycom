@@ -12,5 +12,6 @@ orderRoute.put("/delivered", controllers.orderDelivered);
 orderRoute.put("/rejected", controllers.orderRejected);
 orderRoute.put("/processOrder", controllers.processOrder);
 orderRoute.put("/revert", controllers.orderReverted);
+orderRoute.get("/orderHis", controllers.orderHistory);
 
 module.exports = orderRoute;
