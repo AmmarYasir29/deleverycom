@@ -1,14 +1,8 @@
-// var admin = require("firebase-admin");
-
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 const sendNofi = require("../helper/sendNofi");
 
-// var serviceAccount = require("../helper/push-notifictioan.json");
-
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount),
-// });
-
-exports.sendNotificaton = async (req, res, next) => {
+const sendNotificaton = async (req, res, next) => {
   let dataObj = {
     orderId: "2222222",
     orderDate: "2020-02-02",
@@ -21,4 +15,13 @@ exports.sendNotificaton = async (req, res, next) => {
   } catch (error) {
     res.status(500).send("Unexpected error: " + error);
   }
+};
+
+const auditSys = async (req, res) => {
+  let auditRec = await prisma.ApiAuditLog.findMany();
+  return res.json(auditRec);
+};
+module.exports = {
+  auditSys,
+  sendNotificaton,
 };

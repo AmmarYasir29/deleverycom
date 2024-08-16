@@ -107,3 +107,19 @@ model Invoice {
   merchant   Merchant @relation(fields: [merchantId], references: [id])
   merchantId Int
 }
+
+model ApiAuditLog {
+  id             Int      @id @default(autoincrement())
+  method         String
+  urlPath        String
+  headers        Json
+  queryParams    Json
+  requestBody    Json
+  ipAddress      String
+  responseStatus Int?
+  responseBody   Json?
+  responseTime   Int?
+  errorMessage   String?
+  errorStack     String?
+  createdAt      DateTime @default(now())
+}

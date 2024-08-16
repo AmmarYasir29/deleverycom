@@ -1,7 +1,25 @@
 // const AppError = require("../helper/AppError");
 const PrismaError = require("../helper/PrismaError");
 
-const errorHandler = (error, req, res, next) => {
+const errorHandler = async (error, req, res, next) => {
+  try {
+    await prisma.apiAuditLog.create({
+      data: {
+        method: req.method,
+        urlPath: req.originalUrl,
+        headers: req.headers,
+        queryParams: req.query,
+        requestBody: req.body,
+        ipAddress: req.ip,
+        responseStatus: res.statusCode || 500,
+        errorMessage: err.message,
+        errorStack: err.stack,
+      },
+    });
+  } catch (error) {
+    console.error("Error saving error log:", error);
+  }
+
   //* custom error *//
 
   // console.log("before message " + error.errCode);

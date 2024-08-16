@@ -9,6 +9,7 @@ const orderRoute = require("./routes/order.routes");
 const errorHandler = require("./middleware/errorMiddleware");
 const auth = require("./middleware/auth");
 const extraRoute = require("./routes/extra.routes");
+const auditMiddleware = require("./middleware/auditMiddleware");
 
 dotenv.config();
 
@@ -18,6 +19,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+app.use(auditMiddleware);
 
 app.use("/api/auth", authRoute);
 app.use(auth);
