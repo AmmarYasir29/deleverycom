@@ -1,3 +1,5 @@
+// import * as dotenv from "dotenv";
+const dotenv = require("dotenv");
 const express = require("express");
 const bodyParser = require("body-parser");
 const authRoute = require("./routes/auth.routes");
@@ -7,6 +9,8 @@ const orderRoute = require("./routes/order.routes");
 const errorHandler = require("./middleware/errorMiddleware");
 const auth = require("./middleware/auth");
 const extraRoute = require("./routes/extra.routes");
+
+dotenv.config();
 
 const port = process.env.PORT || 3000;
 const app = express();

@@ -18,20 +18,12 @@ const sendNofi = async (title, body, data, fcmToken) => {
     },
     token: fcmToken,
   };
-  console.log(title, body, data);
-
-  //let notif =
-  await admin
-    .messaging()
-    .send(msg)
-    .then(response => {
-      console.log(response);
-      return `Notification sent successfully:  ${response}`;
-    })
-    .catch(error => {
-      console.log(error.message);
-      return "Unexpected error: " + error.message;
-    });
+  try {
+    const response = await admin.messaging().send(msg);
+    return `Notification sent successfully:  ${response}`;
+  } catch (error) {
+    return "Unexpected error: " + error.message;
+  }
 };
 
 module.exports = sendNofi;

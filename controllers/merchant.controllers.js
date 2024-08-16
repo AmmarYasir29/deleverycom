@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 var bcrypt = require("bcryptjs");
+const sendNofi = require("../helper/sendNofi");
 
 const createMerchant = async (req, res) => {
   const {
@@ -37,7 +38,15 @@ const createMerchant = async (req, res) => {
       password: cryptPassword,
     },
   });
-  res.json(newMerchant);
+
+  let x = await sendNofi(
+    "titele",
+    "body",
+    { orderId: "22222", orderDate: "2020-02-02" },
+    req.user.fcmToken
+  );
+
+  res.json({ newMerchant, x });
 };
 
 const showMerchants = async (req, res) => {
