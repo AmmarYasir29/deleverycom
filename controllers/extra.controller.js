@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const sendNofi = require("../helper/sendNofi");
+const requestIp = require("request-ip");
 
 const sendNotificaton = async (req, res, next) => {
   let dataObj = {
@@ -21,7 +22,17 @@ const auditSys = async (req, res) => {
   let auditRec = await prisma.ApiAuditLog.findMany();
   return res.json(auditRec);
 };
+const getIp = async (req, res) => {
+  res.json({
+    socket: req.socket.remoteAddress,
+    ipAddress: req.ipAddress,
+    clintIP: requestIp.getClientIp(req),
+    headerForwared: req.headers["x-forwarded-for"],
+  });
+};
+
 module.exports = {
   auditSys,
   sendNotificaton,
+  getIp,
 };
