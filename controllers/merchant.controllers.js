@@ -2,8 +2,11 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 var bcrypt = require("bcryptjs");
 const sendNofi = require("../helper/sendNofi");
+const PrismaError = require("../helper/PrismaError");
+const AppError = require("../helper/AppError");
+const errorCode = require("../helper/errorCode");
 
-const createMerchant = async (req, res) => {
+const createMerchant = async (req, res, next) => {
   const {
     fullname = "",
     username,
@@ -24,29 +27,34 @@ const createMerchant = async (req, res) => {
   const salt = await bcrypt.genSalt(10);
   const cryptPassword = await bcrypt.hash(password, salt);
 
-  const newMerchant = await prisma.Merchant.create({
-    data: {
-      fullname,
-      username,
-      phone,
-      pageName,
-      lat,
-      long,
-      debt,
-      city,
-      area,
-      password: cryptPassword,
-    },
-  });
+  try {
+    const newMerchant = await prisma.merchant.create({
+      data: {
+        fullname,
+        username,
+        phone,
+        pageName,
+        lat,
+        long,
+        debt,
+        city,
+        area,
+        password: cryptPassword,
+      },
+    });
 
-  let x = await sendNofi(
-    "titele",
-    "body",
-    { orderId: "22222", orderDate: "2020-02-02" },
-    req.user.fcmToken
-  );
+    let x = await sendNofi(
+      "titele",
+      "body",
+      { orderId: "22222", orderDate: "2020-02-02" },
+      req.user.fcmToken
+    );
 
-  res.json({ newMerchant, x });
+    res.json({ newMerchant, x });
+  } catch (e) {
+    let msg = errorCode(`${e.code || e.errorCode}`, "DB error not found");
+    next(new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode)));
+  }
 };
 
 const showMerchants = async (req, res) => {

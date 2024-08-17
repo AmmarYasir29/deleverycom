@@ -47,7 +47,7 @@ const login = async (req, res) => {
 
   jwt.sign(payload, "secretOrPrivateKey", (err, token) => {
     if (err) res.status(500).json({ err });
-    res.status(200).json({ token, id: user.id });
+    res.status(200).json({ token, id: user.id, role });
   });
   // } catch (e) {
   // res.json({ msg: e });
