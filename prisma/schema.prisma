@@ -10,7 +10,8 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  // url      = env("DATABASE_URL_LOC")
+  // url      = env("DATABASE_LOCAL")
+  // psql -U gardinya -d gardinyadb -h localhost -p 5432
 }
 
 model Merchant {

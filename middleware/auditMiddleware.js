@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const requestIp = require("request-ip");
 
 const auditMiddleware = async (req, res, next) => {
   const startTime = Date.now();
@@ -12,9 +13,14 @@ const auditMiddleware = async (req, res, next) => {
       headers: req.headers,
       queryParams: req.query,
       requestBody: req.body,
-      ipAddress: req.ip,
+      ipAddress:
+        `${req.headers["-fox-forwardedr"]}` || `${req.socket.remoteAddress}`,
     },
   });
+  console.log(req.socket.remoteAddress);
+  console.log(req.ipAddress);
+  console.log(requestIp.getClientIp(req));
+  console.log(req.headers["x-forwarded-for"]);
 
   // Keep a reference to the original res.send method
   const originalSend = res.send;

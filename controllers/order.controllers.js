@@ -806,11 +806,9 @@ const editOrder = async (req, res) => {
     // customerName = "",
     customerPhone,
     customerPhone2,
-    customerLat,
-    customerLong,
-    // city = "",
-    // area = "",
-    // nearestPoint = "",
+    city,
+    area,
+    nearestPoint,
     // orderAmount = 0,
     // orderCount = 0,
     // notes = "",
@@ -822,8 +820,9 @@ const editOrder = async (req, res) => {
     data: {
       customerPhone,
       customerPhone2,
-      customerLat,
-      customerLong,
+      city,
+      area,
+      nearestPoint,
     },
   });
 
