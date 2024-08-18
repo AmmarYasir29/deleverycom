@@ -2,6 +2,7 @@ var bcrypt = require("bcryptjs");
 var jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+require("dotenv").config();
 
 const login = async (req, res) => {
   const { username, password, loginType, fcmToken = "" } = req.body;
@@ -45,7 +46,8 @@ const login = async (req, res) => {
     },
   };
 
-  jwt.sign(payload, "secretOrPrivateKey", (err, token) => {
+  // jwt.sign(payload, "secretOrPrivateKey", (err, token) => {
+  jwt.sign(payload, process.env.JWT_KEY, (err, token) => {
     if (err) res.status(500).json({ err });
     res.status(200).json({ token, id: user.id, role });
   });
@@ -58,59 +60,59 @@ const login = async (req, res) => {
   // }
 };
 
-const userInfo = async (req, res) => {
-  try {
-    let user;
-    let followMe = false;
-    if (req.query.userId) {
-      user = await User.findById(req.query.userId);
-    } else if (req.query.username) {
-      user = await User.findOne({ username: req.query.username });
-    } else {
-      user = await User.findById(req.user.id);
-    }
-    if (!user) res.status(404).json({ message: "User not found" });
+// const userInfo = async (req, res) => {
+//   try {
+//     let user;
+//     let followMe = false;
+//     if (req.query.userId) {
+//       user = await User.findById(req.query.userId);
+//     } else if (req.query.username) {
+//       user = await User.findOne({ username: req.query.username });
+//     } else {
+//       user = await User.findById(req.user.id);
+//     }
+//     if (!user) res.status(404).json({ message: "User not found" });
 
-    const followCount = {};
-    followCount.followers = user.followers.length;
-    followCount.followings = user.followings.length;
-    const { password, updatedAt, followings, followers, ...other } = user._doc;
+//     const followCount = {};
+//     followCount.followers = user.followers.length;
+//     followCount.followings = user.followings.length;
+//     const { password, updatedAt, followings, followers, ...other } = user._doc;
 
-    if (user.followers.includes(req.user.id)) followMe = true;
+//     if (user.followers.includes(req.user.id)) followMe = true;
 
-    res.status(200).json({ user: other, followCount, followMe });
-  } catch (e) {
-    res.status(501).json({ message: "Error in Fetching user", err: e });
-  }
-};
+//     res.status(200).json({ user: other, followCount, followMe });
+//   } catch (e) {
+//     res.status(501).json({ message: "Error in Fetching user", err: e });
+//   }
+// };
 
-const userUpdate = async (req, res) => {
-  if (req.user.id === req.params.id || req.body.isAdmin) {
-    if (req.body.password) {
-      try {
-        const salt = await bcrypt.genSalt(10);
-        req.body.password = await bcrypt.hash(req.body.password, salt);
-      } catch (error) {
-        res.status(501).json(error);
-      }
-    }
-    try {
-      const updatedUser = await User.findByIdAndUpdate(req.params.id, {
-        $set: req.body,
-      });
-      res.status(200).json("Account has been updated");
-    } catch (error) {
-      return res.status(501).json({ message: "error in updated user", error });
-    }
-  } else {
-    return res
-      .status(400)
-      .json({ message: "You can update only your account" });
-  }
-};
+// const userUpdate = async (req, res) => {
+//   if (req.user.id === req.params.id || req.body.isAdmin) {
+//     if (req.body.password) {
+//       try {
+//         const salt = await bcrypt.genSalt(10);
+//         req.body.password = await bcrypt.hash(req.body.password, salt);
+//       } catch (error) {
+//         res.status(501).json(error);
+//       }
+//     }
+//     try {
+//       const updatedUser = await User.findByIdAndUpdate(req.params.id, {
+//         $set: req.body,
+//       });
+//       res.status(200).json("Account has been updated");
+//     } catch (error) {
+//       return res.status(501).json({ message: "error in updated user", error });
+//     }
+//   } else {
+//     return res
+//       .status(400)
+//       .json({ message: "You can update only your account" });
+//   }
+// };
 
 module.exports = {
   login,
-  userInfo,
-  userUpdate,
+  // userInfo,
+  // userUpdate,
 };

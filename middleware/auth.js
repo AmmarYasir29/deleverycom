@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-// require("dotenv").config();
+require("dotenv").config();
 
 module.exports = function (req, res, next) {
   // const token = req.header("Token");
@@ -10,8 +10,8 @@ module.exports = function (req, res, next) {
   }
   const token = authHeader.split(" ")[1];
   try {
-    // const decoded = jwt.verify(token, process.env.JWT_KEY);
-    const decoded = jwt.verify(token, "secretOrPrivateKey");
+    const decoded = jwt.verify(token, process.env.JWT_KEY);
+    // const decoded = jwt.verify(token, "secretOrPrivateKey");
     req.user = decoded.user;
     next();
   } catch (e) {
