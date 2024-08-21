@@ -113,7 +113,18 @@ const showdelegate = async (req, res) => {
   res.json(users);
 };
 
+const delegateOrders = async (req, res) => {
+  let delegateId = parseInt(req.query.delegateId);
+  let orders = await prisma.order.findMany({
+    where: {
+      delegateId: delegateId,
+    },
+  });
+  res.json(orders);
+};
+
 module.exports = {
+  delegateOrders,
   createdelegate,
   showdelegate,
 };
