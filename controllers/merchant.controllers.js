@@ -204,6 +204,7 @@ const showAllDebt = async (req, res) => {
       },
     },
     select: {
+      id: true,
       fullname: true,
       username: true,
       phone: true,
