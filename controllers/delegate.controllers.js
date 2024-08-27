@@ -6,19 +6,13 @@ const AppError = require("../helper/AppError");
 const errorCode = require("../helper/errorCode");
 
 const createdelegate = async (req, res, next) => {
-  const {
-    username,
-    password,
-    fullname = "",
-    phone = "",
-    city = "",
-    area = "",
-  } = req.body;
+  const { username, password, fullname, phone, city, area } = req.body;
   try {
     const usernaemExist = await prisma.delegate.count({
       where: { username },
     });
-    if (username.indexOf(" ") >= 0) return res.json("username have space");
+    if (username.indexOf(" ") >= 0)
+      return res.status(400).json("username have space");
 
     // if (usernaemExist > 0)
     // throw new AppError("APIError", "username exist try others", 1);

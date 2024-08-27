@@ -8,22 +8,24 @@ const errorCode = require("../helper/errorCode");
 
 const createMerchant = async (req, res, next) => {
   const {
-    fullname = "",
+    fullname,
     username,
-    phone = "",
-    pageName = "",
-    lat = "",
-    long = "",
+    phone,
+    pageName,
+    lat,
+    long,
     debt = 0,
-    city = "",
+    city,
     password,
-    area = "",
+    area,
   } = req.body;
   const usernaemExist = await prisma.merchant.count({
     where: { username },
   });
-  if (usernaemExist > 0) return res.json(`username exist try another`);
-  if (username.indexOf(" ") >= 0) return res.json("username have space");
+  if (usernaemExist > 0)
+    return res.status(400).json(`username exist try another`);
+  if (username.indexOf(" ") >= 0)
+    return res.status(400).json("username have space");
   const salt = await bcrypt.genSalt(10);
   const cryptPassword = await bcrypt.hash(password, salt);
 

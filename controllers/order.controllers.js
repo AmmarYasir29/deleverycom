@@ -140,7 +140,7 @@ const OrdersBasedOnStatus = async (req, res) => {
 
   let merchant;
   let delegate;
-  if (req.user.role == 3) {
+  if (req.user.role == 3 || req.user.role == 4) {
     merchant = parseInt(req.query.orderMerchant); // super admin
     delegate = parseInt(req.query.orderDelegate); // super admin
   } else if (req.user.role == 1) merchant = parseInt(req.user.id); // merchant
@@ -378,7 +378,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         });
       }
     }
-  } else if (req.user.role == 3) {
+  } else if (req.user.role == 3 || req.user.role == 4) {
     // admin
 
     if ((isNaN(merchant) && isNaN(delegate)) || (merchant && delegate)) {
