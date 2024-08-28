@@ -1,5 +1,13 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const server = require("http").createServer();
+const io = require("socket.io")(server);
+// const io = socketIo(server, {
+//   cors: {
+//       origin: "*",  // Allow all origins for testing purposes
+//       methods: ["GET", "POST"]
+//   }
+// });
 
 const create = async (req, res) => {
   const {
@@ -745,290 +753,6 @@ const OrdersBasedOnStatus = async (req, res) => {
       }
     }
   }
-  // -------------------------------------------------------
-  // if ((merchant == 0||delegate == 0) && req.user.role != 3) {
-  //   return res.status(400).json({ message: "request just for super ADMIN" });
-  // } else if (merchant == 0 && req.user.role == 3) {
-  //   if (status == 0) {
-  //     const orders = await prisma.order.findMany({
-  //       take,
-  //       skip,
-  //       orderBy: {
-  //         id: "asc",
-  //       },
-  //       include: {
-  //         delegate: {
-  //           select: {
-  //             fullname: true,
-  //             username: true,
-  //             phone: true,
-  //             city: true,
-  //             area: true,
-  //           },
-  //         },
-  //         merchant: {
-  //           select: {
-  //             fullname: true,
-  //             username: true,
-  //             phone: true,
-  //             pageName: true,
-  //             city: true,
-  //             area: true,
-  //           },
-  //         },
-  //       },
-  //     });
-  //     const total = await prisma.order.count();
-
-  //     return res.json({
-  //       data: orders,
-  //       metadata: {
-  //         hasNextPage: skip + take < total,
-  //         totalPages: Math.ceil(total / take),
-  //       },
-  //     });
-  //   } else if (status != 0) {
-  //     const orders = await prisma.order.findMany({
-  //       take,
-  //       skip,
-  //       orderBy: {
-  //         id: "asc",
-  //       },
-  //       where: {
-  //         orderStatus: status,
-  //       },
-  //       include: {
-  //         delegate: {
-  //           select: {
-  //             fullname: true,
-  //             username: true,
-  //             phone: true,
-  //             city: true,
-  //             area: true,
-  //           },
-  //         },
-  //         merchant: {
-  //           select: {
-  //             fullname: true,
-  //             username: true,
-  //             phone: true,
-  //             pageName: true,
-  //             city: true,
-  //             area: true,
-  //           },
-  //         },
-  //       },
-  //     });
-  //     const total = await prisma.order.count({
-  //       where: {
-  //         orderStatus: status,
-  //       },
-  //     });
-
-  //     return res.json({
-  //       data: orders,
-  //       metadata: {
-  //         hasNextPage: skip + take < total,
-  //         totalPages: Math.ceil(total / take),
-  //       },
-  //     });
-
-  //   }
-
-  // } else if (merchant != 0 && req.user.role == 3) {
-  // if (status == 0) {
-  //   const orders = await prisma.order.findMany({
-  //     take,
-  //     skip,
-  //     orderBy: {
-  //       id: "asc",
-  //     },
-  //     where: {
-  //       merchantId: merchant,
-  //     },
-  //     include: {
-  //       delegate: {
-  //         select: {
-  //           fullname: true,
-  //           username: true,
-  //           phone: true,
-  //           city: true,
-  //           area: true,
-  //         },
-  //       },
-  //       merchant: {
-  //         select: {
-  //           fullname: true,
-  //           username: true,
-  //           phone: true,
-  //           pageName: true,
-  //           city: true,
-  //           area: true,
-  //         },
-  //       },
-  //     },
-  //   });
-  //   const total = await prisma.order.count({
-  //     where: {
-  //       merchantId: merchant,
-  //     },
-  //   });
-
-  //   return res.json({
-  //     data: orders,
-  //     metadata: {
-  //       hasNextPage: skip + take < total,
-  //       totalPages: Math.ceil(total / take),
-  //     },
-  //   });
-  // } else if (status != 0) {
-  // const orders = await prisma.order.findMany({
-  // take,
-  // skip,
-  // orderBy: {
-  //   id: "asc",
-  // },
-  // where: {
-  //   orderStatus: status,
-  //   merchantId: merchant,
-  // },
-  // include: {
-  //   delegate: {
-  //     select: {
-  //       fullname: true,
-  //       username: true,
-  //       phone: true,
-  //       city: true,
-  //       area: true,
-  //     },
-  //   },
-  //   merchant: {
-  //     select: {
-  //       fullname: true,
-  //       username: true,
-  //       phone: true,
-  //       pageName: true,
-  //       city: true,
-  //       area: true,
-  //     },
-  //   },
-  // },
-  // });
-
-  // const total = await prisma.order.count({
-  //   where: {
-  //     orderStatus: status,
-  //     merchantId: merchant,
-  //   },
-  // });
-
-  // res.json({
-  //   data: orders,
-  //   metadata: {
-  //     hasNextPage: skip + take < total,
-  //     totalPages: Math.ceil(total / take),
-  //   },
-  // });
-  // }
-  // } else if (merchant != 0 && req.user.role == 1) {
-  //   if (status == 0) {
-  //     const orders = await prisma.order.findMany({
-  //       take,
-  //       skip,
-  //       orderBy: {
-  //         id: "asc",
-  //       },
-  //       where: {
-  //         NOT: {
-  //           orderStatus: 5,
-  //         },
-  //         merchantId: merchant,
-  //       },
-  //       include: {
-  //         delegate: {
-  //           select: {
-  //             fullname: true,
-  //             username: true,
-  //             phone: true,
-  //             city: true,
-  //             area: true,
-  //           },
-  //         },
-  //         merchant: {
-  //           select: {
-  //             fullname: true,
-  //             username: true,
-  //             phone: true,
-  //             pageName: true,
-  //             city: true,
-  //             area: true,
-  //           },
-  //         },
-  //       },
-  //     });
-  //     const total = await prisma.order.count({
-  //       where: {
-  //         merchantId: merchant,
-  //       },
-  //     });
-
-  //     return res.json({
-  //       data: orders,
-  //       metadata: {
-  //         hasNextPage: skip + take < total,
-  //         totalPages: Math.ceil(total / take),
-  //       },
-  //     });
-  //   } else {
-  //     const orders = await prisma.order.findMany({
-  //       take,
-  //       skip,
-  //       orderBy: {
-  //         id: "asc",
-  //       },
-  //       where: {
-  //         orderStatus: status,
-  //         merchantId: merchant,
-  //       },
-  //       include: {
-  //         delegate: {
-  //           select: {
-  //             fullname: true,
-  //             username: true,
-  //             phone: true,
-  //             city: true,
-  //             area: true,
-  //           },
-  //         },
-  //         merchant: {
-  //           select: {
-  //             fullname: true,
-  //             username: true,
-  //             phone: true,
-  //             pageName: true,
-  //             city: true,
-  //             area: true,
-  //           },
-  //         },
-  //       },
-  //     });
-
-  //     const total = await prisma.order.count({
-  //       where: {
-  //         orderStatus: status,
-  //         merchantId: merchant,
-  //       },
-  //     });
-
-  //     res.json({
-  //       data: orders,
-  //       metadata: {
-  //         hasNextPage: skip + take < total,
-  //         totalPages: Math.ceil(total / take),
-  //       },
-  //     });
-  //   }
-  // }
 };
 
 const assignOrderDelegate = async (req, res) => {
@@ -1234,6 +958,14 @@ const orderRejected = async (req, res) => {
         },
       },
     });
+    io.on("connection", client => {
+      console.log("A user connected:", client.id);
+
+      client.emit("rejectOrder", {
+        message: "order rejected: " + order.id,
+      });
+    });
+
     res.json(order);
   } catch (error) {
     res.json({ error: error });
