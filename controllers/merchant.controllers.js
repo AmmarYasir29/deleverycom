@@ -45,12 +45,7 @@ const createMerchant = async (req, res, next) => {
       },
     });
 
-    let x = await sendNofi(
-      "titele",
-      "body",
-      { orderId: "22222", orderDate: "2020-02-02" },
-      req.user.fcmToken
-    );
+    let x = await sendNofi("تم انشاء تاجر", "orderId", req.user.fcmToken);
 
     res.json({ newMerchant, x });
   } catch (e) {

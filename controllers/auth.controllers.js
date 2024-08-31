@@ -36,6 +36,7 @@ const login = async (req, res) => {
     if (user.type == 3) role = 3; // admin
     else if (user.type == 4) role = 4; //emp
   }
+
   const isMatch = await bcrypt.compare(password, user.password);
   !isMatch && res.status(404).json({ message: "Incorrect Password !" });
   const payload = {

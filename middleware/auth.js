@@ -19,3 +19,22 @@ module.exports = function (req, res, next) {
     res.status(501).send({ message: "Invalid Token" });
   }
 };
+
+module.exports.authenticateSocket = function (socket, next) {
+  const token = socket.handshake.auth.token;
+  // console.log("socket auth");
+
+  if (!token) {
+    return next(new Error("Authentication error"));
+    // return res.status(401).json({ message: "Authentication error" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_KEY);
+    // const decoded = jwt.verify(token, "secretOrPrivateKey");
+    socket.user = decoded.user;
+    next();
+  } catch (e) {
+    res.status(501).send({ message: "Invalid Token" });
+  }
+};

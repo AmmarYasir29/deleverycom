@@ -1,13 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const server = require("http").createServer();
-const io = require("socket.io")(server);
-// const io = socketIo(server, {
-//   cors: {
-//       origin: "*",  // Allow all origins for testing purposes
-//       methods: ["GET", "POST"]
-//   }
-// });
 
 const create = async (req, res) => {
   const {
@@ -919,8 +911,8 @@ const orderDelivered = async (req, res) => {
 const orderRejected = async (req, res) => {
   let orderId = parseInt(req.query.orderId);
   let reason = parseInt(req.body.reason);
-  if (req.user.role != 2)
-    return res.json({ message: "Rejected order just for delegate" });
+  // if (req.user.role != 2)
+  // return res.json({ message: "Rejected order just for delegate" });
   try {
     const order = await prisma.order.update({
       where: { id: orderId },
@@ -958,16 +950,16 @@ const orderRejected = async (req, res) => {
         },
       },
     });
-    io.on("connection", client => {
-      console.log("A user connected:", client.id);
+    const io = req.app.get("socketio"); // Get Socket.IO instance from Express app
 
-      client.emit("rejectOrder", {
-        message: "order rejected: " + order.id,
-      });
+    io.emit("rejectOrder", {
+      message: "Order rejected num: " + order.id,
     });
 
     res.json(order);
   } catch (error) {
+    console.error("Error processing order rejection:", error); // Log errors
+
     res.json({ error: error });
   }
 };

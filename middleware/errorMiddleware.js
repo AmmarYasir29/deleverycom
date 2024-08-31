@@ -1,7 +1,9 @@
 // const AppError = require("../helper/AppError");
 const PrismaError = require("../helper/PrismaError");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
-const errorHandler = async (error, req, res, next) => {
+const errorHandler = async (err, req, res, next) => {
   try {
     await prisma.apiAuditLog.create({
       data: {
@@ -34,12 +36,12 @@ const errorHandler = async (error, req, res, next) => {
   // }
   // console.log(message);
 
-  if (error instanceof PrismaError) {
-    return res.status(error.statusCode).json({
+  if (err instanceof PrismaError) {
+    return res.status(err.statusCode).json({
       success: false,
-      name: error.name,
-      message: error.message,
-      errCode: error.errCode,
+      name: err.name,
+      message: err.message,
+      errCode: err.errCode,
     });
   }
 
@@ -52,7 +54,7 @@ const errorHandler = async (error, req, res, next) => {
   //   });
   // }
   //* random error *//
-  return res.status(500).send(`something got wrong: ${error}`);
+  return res.status(500).send(`something got wrong: ${err}`);
 };
 
 module.exports = errorHandler;
