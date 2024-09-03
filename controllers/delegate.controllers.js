@@ -8,15 +8,9 @@ const errorCode = require("../helper/errorCode");
 const createdelegate = async (req, res, next) => {
   const { username, password, fullname, phone, city, area } = req.body;
   try {
-    // const usernaemExist = await prisma.delegate.count({
-    //   where: { username },
-    // });
     if (username.indexOf(" ") >= 0) {
-      // return res.status(400).json("username have space");
       throw new AppError("username have space", 404, 400);
     }
-    // if (usernaemExist > 0)
-    // throw new AppError("APIError", "username exist try others", 1);
     const salt = await bcrypt.genSalt(10);
     const cryptPassword = await bcrypt.hash(password, salt);
 

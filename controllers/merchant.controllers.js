@@ -1,4 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
 var bcrypt = require("bcryptjs");
 const sendNofi = require("../helper/sendNofi");
@@ -19,17 +19,17 @@ const createMerchant = async (req, res, next) => {
     password,
     area,
   } = req.body;
-  const usernaemExist = await prisma.merchant.count({
-    where: { username },
-  });
-  if (usernaemExist > 0)
-    return res.status(400).json(`username exist try another`);
-  if (username.indexOf(" ") >= 0)
-    return res.status(400).json("username have space");
-  const salt = await bcrypt.genSalt(10);
-  const cryptPassword = await bcrypt.hash(password, salt);
-
   try {
+    // const usernaemExist = await prisma.merchant.count({
+    //   where: { username },
+    // });
+    // if (usernaemExist > 0)
+    //   return res.status(400).json(`username exist try another`);
+    if (username.indexOf(" ") >= 0)
+      throw new AppError("اسم المستخدم يحتوي على مسافة", 404, 400);
+    const salt = await bcrypt.genSalt(10);
+    const cryptPassword = await bcrypt.hash(password, salt);
+
     const newMerchant = await prisma.merchant.create({
       data: {
         fullname,
@@ -45,12 +45,28 @@ const createMerchant = async (req, res, next) => {
       },
     });
 
-    let x = await sendNofi("تم انشاء تاجر", "orderId", req.user.fcmToken);
+    let x = await sendNofi(
+      "انشاء حساب",
+      "تم انشاء حساب التاجر بنجاح",
+      req.user.fcmToken
+    );
 
-    res.json({ newMerchant, x });
+    res.json(newMerchant);
   } catch (e) {
-    let msg = errorCode(`${e.code || e.errorCode}`, "DB error not found");
-    next(new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode)));
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientInitializationError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`, "DB error not found");
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    }
   }
 };
 
@@ -144,7 +160,8 @@ const showMerchants = async (req, res) => {
 
 const showDebt = async (req, res) => {
   const merchantId =
-    req.user.role == 1 ? req.user.id : parseInt(req.query.merchantId);
+    req.user.role == 1 ? req.usre.id : parseInt(req.query.merchantId);
+
   const totalDebt = await prisma.merchant.findUnique({
     where: {
       id: merchantId,
@@ -153,7 +170,7 @@ const showDebt = async (req, res) => {
       debt: true,
     },
   });
-  const penddingOrder = await prisma.order.count({
+  const penddingOrder = prisma.order.count({
     where: { merchantId, orderStatus: 1 },
   });
   const assignedOrder = await prisma.order.count({
@@ -190,7 +207,7 @@ const requestDebt = async (req, res) => {
     },
   });
 
-  res.json({ message: "requested succsufully" });
+  res.json({ message: `تم طلب الرصيد ${updateMerchant.debt} بنجاح` });
 };
 
 const showAllDebt = async (req, res) => {
@@ -247,7 +264,7 @@ const givenDebt = async (req, res) => {
     },
   });
 
-  res.json({ message: "Reset the debt succsufully" });
+  res.json({ message: "تم تصفير الرصيد" });
 };
 const showStatements = async (req, res) => {
   const take = parseInt(req.query.PAGE_SIZE) || 25;
