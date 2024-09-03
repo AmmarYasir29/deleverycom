@@ -39,8 +39,15 @@ app.use("/api/merchant", merchantRoute);
 app.use("/api/delegate", delegateRoute);
 app.use("/api/order", orderRoute);
 app.use("/api/ohter", extraRoute);
-io.use(auth.authenticateSocket);
+// io.use(auth.authenticateSocket);
 app.use(errorHandler);
+
+io.on("connection", socket => {
+  console.log("a user connected");
+  io.emit("ammar", {
+    message: "res: " + socket,
+  });
+});
 
 app.set("socketio", io);
 
