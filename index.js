@@ -42,12 +42,14 @@ app.use("/api/ohter", extraRoute);
 // io.use(auth.authenticateSocket);
 app.use(errorHandler);
 
-io.on("connection", socket => {
-  console.log("a user connected");
-  io.emit("ammar", {
-    message: "res: " + socket,
-  });
-});
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+
+// io.on("connection", socket => {
+//   console.log("a user connected");
+
+//   console.log("Socket Options:", socket.handshake);
+// });
 
 app.set("socketio", io);
 
