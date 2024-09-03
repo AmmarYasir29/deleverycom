@@ -1,4 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
 var bcrypt = require("bcryptjs");
 const PrismaError = require("../helper/PrismaError");
@@ -8,12 +8,13 @@ const errorCode = require("../helper/errorCode");
 const createdelegate = async (req, res, next) => {
   const { username, password, fullname, phone, city, area } = req.body;
   try {
-    const usernaemExist = await prisma.delegate.count({
-      where: { username },
-    });
-    if (username.indexOf(" ") >= 0)
-      return res.status(400).json("username have space");
-
+    // const usernaemExist = await prisma.delegate.count({
+    //   where: { username },
+    // });
+    if (username.indexOf(" ") >= 0) {
+      // return res.status(400).json("username have space");
+      throw new AppError("username have space", 404, 400);
+    }
     // if (usernaemExist > 0)
     // throw new AppError("APIError", "username exist try others", 1);
     const salt = await bcrypt.genSalt(10);
@@ -31,8 +32,20 @@ const createdelegate = async (req, res, next) => {
     });
     res.json(newDelegate);
   } catch (e) {
-    let msg = errorCode(`${e.code || e.errorCode}`, "DB error not found");
-    next(new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode)));
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientInitializationError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`, "DB error not found");
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    }
   }
 };
 

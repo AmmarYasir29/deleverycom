@@ -21,7 +21,7 @@ const cors = require("cors");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // Adjust CORS settings as needed
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
@@ -39,22 +39,8 @@ app.use("/api/merchant", merchantRoute);
 app.use("/api/delegate", delegateRoute);
 app.use("/api/order", orderRoute);
 app.use("/api/ohter", extraRoute);
-io.use(auth.authenticateSocket);
+// io.use(auth.authenticateSocket);
 app.use(errorHandler);
-
-// io.on("connection", socket => {
-//   console.log("A user connected:", socket.id);
-//   console.log(socket.handshake);
-//   if (!socket.handshake.auth) return res.json("not found");
-//   socket.on("sendNotification", data => {
-//     console.log("A user disconnected:", data);
-//     io.emit("notification", { message: data.message });
-//   });
-
-//   socket.on("disconnect", () => {
-//     console.log("User disconnected:", socket.id);
-//   });
-// });
 
 app.set("socketio", io);
 
