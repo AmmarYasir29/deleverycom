@@ -35,6 +35,6 @@ module.exports.authenticateSocket = function (socket, next) {
     socket.user = decoded.user;
     next();
   } catch (e) {
-    res.status(501).send({ message: "Invalid Token" });
+    return next(new Error("Invalid Token", e));
   }
 };
