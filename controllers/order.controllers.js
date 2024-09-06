@@ -1,14 +1,17 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
 const sendNofi = require("../helper/sendNofi");
+const AppError = require("../helper/AppError");
+const errorCode = require("../helper/errorCode");
+const PrismaError = require("../helper/PrismaError");
 
-const create = async (req, res) => {
+const create = async (req, res, next) => {
   const {
     customerName,
     customerPhone,
     customerPhone2,
-    customerLat,
-    customerLong,
+    customerLat = "0",
+    customerLong = "0",
     city,
     area,
     nearestPoint,
@@ -21,63 +24,84 @@ const create = async (req, res) => {
   if (req.user.role != 1) {
     return res.json({ message: "create order just for merchant" });
   } else if (req.user.role == 1) merchantId = parseInt(req.user.id); // merchant
-
-  const newOrder = await prisma.order.create({
-    data: {
-      customerName,
-      customerPhone,
-      customerPhone2,
-      customerLat,
-      customerLong,
-      city,
-      area,
-      nearestPoint,
-      orderAmount,
-      orderCount,
-      orderStatus: 1,
-      notes,
-      // reason,
-      merchant: {
-        connect: {
-          id: merchantId,
+  try {
+    const newOrder = await prisma.order.create({
+      data: {
+        customerName,
+        customerPhone,
+        customerPhone2,
+        customerLat,
+        customerLong,
+        city,
+        area,
+        nearestPoint,
+        orderAmount,
+        orderCount,
+        orderStatus: 1,
+        notes,
+        // reason,
+        merchant: {
+          connect: {
+            id: merchantId,
+          },
         },
+        // delegate: {
+        //   connect: {
+        //     id: 1, // Replace with the existing delegate ID you want to associate
+        //   },
+        // },
       },
-      // delegate: {
-      //   connect: {
-      //     id: 1, // Replace with the existing delegate ID you want to associate
-      //   },
-      // },
-    },
-  });
-  const orderHis = await prisma.orderHistory.create({
-    data: {
-      orderId: newOrder.id,
-      customerName,
-      customerPhone,
-      customerPhone2,
-      customerLat,
-      customerLong,
-      city,
-      area,
-      nearestPoint,
-      orderAmount,
-      orderCount,
-      orderStatus: 1,
-      notes,
-      // reason,
-      merchant: {
-        connect: {
-          id: merchantId,
+    });
+    const orderHis = await prisma.orderHistory.create({
+      data: {
+        orderId: newOrder.id,
+        customerName,
+        customerPhone,
+        customerPhone2,
+        customerLat,
+        customerLong,
+        city,
+        area,
+        nearestPoint,
+        orderAmount,
+        orderCount,
+        orderStatus: 1,
+        notes,
+        // reason,
+        merchant: {
+          connect: {
+            id: merchantId,
+          },
         },
+        // delegate: {
+        //   connect: {
+        //     id: 1, // Replace with the existing delegate ID you want to associate
+        //   },
+        // },
       },
-      // delegate: {
-      //   connect: {
-      //     id: 1, // Replace with the existing delegate ID you want to associate
-      //   },
-      // },
-    },
-  });
-  res.json(newOrder);
+    });
+    res.json(newOrder);
+  } catch (e) {
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientInitializationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`);
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    } else if (
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      console.log(e.message);
+      let msg = e.message.split("Argument");
+      next(new PrismaError(e.name, msg[1], 406, 406));
+    }
+  }
 };
 
 // const showOrders = async (req, res) => {
@@ -146,6 +170,7 @@ const OrdersBasedOnStatus = async (req, res) => {
     delegate = parseInt(req.query.orderDelegate); // super admin
   } else if (req.user.role == 1) merchant = parseInt(req.user.id); // merchant
   else if (req.user.role == 2) delegate = parseInt(req.user.id); // delegate
+
   if (orderNumber != 0) {
     const orders = await prisma.order.findMany({
       where: {
@@ -278,9 +303,9 @@ const OrdersBasedOnStatus = async (req, res) => {
     }
   } else if (req.user.role == 1) {
     // merchant
-    if (merchant == 0 || delegate != undefined)
+    if (merchant == 0 || delegate != undefined) {
       return res.status(400).json({ message: "request just for super ADMIN" });
-    else if (merchant != 0) {
+    } else if (merchant != 0) {
       if (status == 0) {
         const orders = await prisma.order.findMany({
           take,
