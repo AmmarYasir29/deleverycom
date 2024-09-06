@@ -10,23 +10,23 @@ const createMerchant = async (req, res, next) => {
   const {
     fullname,
     username,
+    password,
     phone,
     pageName,
-    lat,
-    long,
-    debt = 0,
     city,
-    password,
     area,
+    lat = "0",
+    long = "0",
   } = req.body;
+  let english = /^[A-Za-z0-9]*$/;
   try {
-    // const usernaemExist = await prisma.merchant.count({
-    //   where: { username },
-    // });
-    // if (usernaemExist > 0)
-    //   return res.status(400).json(`username exist try another`);
     if (username.indexOf(" ") >= 0)
-      throw new AppError("اسم المستخدم يحتوي على مسافة", 404, 400);
+      throw new AppError("اسم المستخدم يحتوي على مسافة", 406, 406);
+
+    for (i = 0; i < username.length; i++)
+      if (!english.test(username[i]))
+        throw new AppError("اسم المستخدم باللغة الانكليزية فقط", 406, 406);
+
     const salt = await bcrypt.genSalt(10);
     const cryptPassword = await bcrypt.hash(password, salt);
 
@@ -38,7 +38,7 @@ const createMerchant = async (req, res, next) => {
         pageName,
         lat,
         long,
-        debt,
+        debt: 0,
         city,
         area,
         password: cryptPassword,
@@ -57,15 +57,19 @@ const createMerchant = async (req, res, next) => {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
     } else if (
       e instanceof Prisma.PrismaClientKnownRequestError ||
-      e instanceof Prisma.PrismaClientUnknownRequestError ||
-      e instanceof Prisma.PrismaClientRustPanicError ||
-      e instanceof Prisma.PrismaClientInitializationError ||
-      e instanceof Prisma.PrismaClientValidationError
+      e instanceof Prisma.PrismaClientInitializationError
     ) {
-      let msg = errorCode(`${e.code || e.errorCode}`, "DB error not found");
+      let msg = errorCode(`${e.code || e.errorCode}`);
       next(
         new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
       );
+    } else if (
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      let msg = e.message.split("Argument");
+      next(new PrismaError(e.name, msg[1], 406, 406));
     }
   }
 };
@@ -155,7 +159,7 @@ const showMerchants = async (req, res) => {
       },
     });
   }
-  res.json(users);
+  res.json(users || []);
 };
 
 const showDebt = async (req, res) => {

@@ -54,7 +54,7 @@ model Order {
   delegate       Delegate? @relation(fields: [delegateId], references: [id])
   delegateId     Int?
   createAt       DateTime  @default(now())
-  updateAt       DateTime?
+  updatedAt      DateTime  @updatedAt
 }
 
 model OrderHistory {
@@ -90,6 +90,8 @@ model Delegate {
   area         String
   Order        Order[]
   OrderHistory OrderHistory[]
+  updatedAt    DateTime       @updatedAt
+  createAt     DateTime       @default(now())
 }
 
 model Super {

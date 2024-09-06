@@ -220,7 +220,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         });
 
         return res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),
@@ -268,7 +268,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         });
 
         return res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),
@@ -323,7 +323,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         });
 
         return res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),
@@ -371,7 +371,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         });
 
         res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),
@@ -417,7 +417,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         const total = await prisma.order.count();
 
         return res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),
@@ -462,7 +462,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         });
 
         return res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),
@@ -509,7 +509,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         });
 
         return res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),
@@ -557,7 +557,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         });
 
         res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),
@@ -597,7 +597,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         const total = await prisma.order.count();
 
         return res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),
@@ -642,7 +642,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         });
 
         return res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),
@@ -689,7 +689,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         });
 
         return res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),
@@ -737,7 +737,7 @@ const OrdersBasedOnStatus = async (req, res) => {
         });
 
         res.json({
-          data: orders,
+          data: orders || [],
           metadata: {
             hasNextPage: skip + take < total,
             totalPages: Math.ceil(total / take),

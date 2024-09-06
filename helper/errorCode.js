@@ -1,4 +1,4 @@
-const messageError = (code, apiMessage) => {
+const messageError = (code, apiMessage = "Unknown DB Error") => {
   let msg;
 
   switch (code) {
