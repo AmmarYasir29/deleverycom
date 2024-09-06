@@ -45,11 +45,6 @@ const create = async (req, res, next) => {
             id: merchantId,
           },
         },
-        // delegate: {
-        //   connect: {
-        //     id: 1, // Replace with the existing delegate ID you want to associate
-        //   },
-        // },
       },
     });
     const orderHis = await prisma.orderHistory.create({
@@ -73,11 +68,6 @@ const create = async (req, res, next) => {
             id: merchantId,
           },
         },
-        // delegate: {
-        //   connect: {
-        //     id: 1, // Replace with the existing delegate ID you want to associate
-        //   },
-        // },
       },
     });
     res.json(newOrder);
@@ -776,6 +766,7 @@ const OrdersBasedOnStatus = async (req, res) => {
 const assignOrderDelegate = async (req, res) => {
   let delegateId = parseInt(req.query.delegateId);
   let orderId = parseInt(req.query.orderId);
+  const io = req.app.get("socketio");
   if (req.user.role != 3)
     return res.json({ message: "assign order just for super admin" });
   try {
@@ -786,6 +777,15 @@ const assignOrderDelegate = async (req, res) => {
         orderStatus: 2,
       },
     });
+
+    // io.emit("assignOrder", {
+    //   message: "تم تكليف بطلب جديد: " + order.id,
+    // });
+    let x = await sendNofi(
+      "عهدة المندوب",
+      "تم تكليف بطلب جديد",
+      req.user.fcmToken
+    );
 
     const orderHis = await prisma.orderHistory.create({
       data: {
@@ -823,6 +823,7 @@ const assignOrderDelegate = async (req, res) => {
 
 const guaranteeOrderDelegate = async (req, res) => {
   let orderId = parseInt(req.query.orderId);
+  const io = req.app.get("socketio");
   if (req.user.role != 2)
     return res.json({ message: "guarantee order just for delegate" });
   try {
@@ -832,11 +833,10 @@ const guaranteeOrderDelegate = async (req, res) => {
         orderStatus: 3,
       },
     });
-    let x = await sendNofi(
-      "عهدة المندوب",
-      "تم تكليف المندوب بطلب جديد",
-      req.user.fcmToken
-    );
+    io.emit("guaranteeOrder", {
+      message: "تم استلام الطلب من قبل المندوب: " + order.id,
+    });
+
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderId: order.id,
@@ -980,7 +980,7 @@ const orderRejected = async (req, res) => {
         },
       },
     });
-    const io = req.app.get("socketio"); // Get Socket.IO instance from Express app
+    const io = req.app.get("socketio");
 
     io.emit("rejectOrder", {
       message: "Order rejected num: " + order.id,

@@ -164,7 +164,7 @@ const showMerchants = async (req, res) => {
 
 const showDebt = async (req, res) => {
   const merchantId =
-    req.user.role == 1 ? req.usre.id : parseInt(req.query.merchantId);
+    req.user.role == 1 ? req.user.id : parseInt(req.query.merchantId);
 
   const totalDebt = await prisma.merchant.findUnique({
     where: {
@@ -174,9 +174,10 @@ const showDebt = async (req, res) => {
       debt: true,
     },
   });
-  const penddingOrder = prisma.order.count({
+  const penddingOrder = await prisma.order.count({
     where: { merchantId, orderStatus: 1 },
   });
+
   const assignedOrder = await prisma.order.count({
     where: { merchantId, orderStatus: 2 },
   });
