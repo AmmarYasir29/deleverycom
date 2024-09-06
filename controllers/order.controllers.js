@@ -777,15 +777,11 @@ const assignOrderDelegate = async (req, res) => {
         orderStatus: 2,
       },
     });
-
-    // io.emit("assignOrder", {
-    //   message: "تم تكليف بطلب جديد: " + order.id,
-    // });
-    let x = await sendNofi(
-      "عهدة المندوب",
-      "تم تكليف بطلب جديد",
-      req.user.fcmToken
-    );
+    const dele = await prisma.delegate.findUnique({
+      where: { id: order.delegateId },
+    });
+    if (dele.fcmToken)
+      await sendNofi("عهدة المندوب", "تم تكليف بطلب جديد", dele.fcmToken);
 
     const orderHis = await prisma.orderHistory.create({
       data: {
@@ -998,12 +994,29 @@ const processOrder = async (req, res) => {
   let orderId = parseInt(req.query.orderId);
   let newData = req.body;
   if (req.user.role != 3)
-    return res.json({ message: "edit order just for admin" });
+    return res.json({ message: "Edit order just for admin" });
 
   const updatedOrder = await prisma.order.update({
     where: { id: orderId },
-    data: newData,
+    data: {
+      customerName: newData.customerName,
+      customerPhone: newData.customerPhone,
+      customerPhone2: newData.customerPhone2,
+      customerLat: newData.customerLat,
+      customerLong: newData.customerLong,
+      city: newData.city,
+      area: newData.area,
+      nearestPoint: newData.nearestPoint,
+      orderAmount: newData.orderAmount,
+      orderCount: newData.orderCount,
+      notes: newData.notes,
+      reason: newData.reason,
+      merchantId: newData.merchantId,
+      delegateId: newData.delegateId,
+    },
+    newData,
   });
+
   let x = await sendNofi(
     "معالجة الطلب",
     `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
@@ -1150,11 +1163,6 @@ const editOrder = async (req, res) => {
     // reason = "",
   } = req.body;
 
-  // let x = await sendNofi(
-  //   "عهدة المندوب",
-  //   "تم تكليف المندوب بطلب جديد",
-  //   req.user.fcmToken
-  // );
   const updatedOrder = await prisma.order.update({
     where: { id: orderId },
     data: {
@@ -1166,11 +1174,11 @@ const editOrder = async (req, res) => {
       orderStatus: 3,
     },
   });
-  let x = await sendNofi(
-    "معالجة الطلب",
-    "تم معالجة الطلب بنجاح",
-    req.user.fcmToken
-  );
+  const dele = await prisma.delegate.findUnique({
+    where: { id: updatedOrder.delegateId },
+  });
+  if (dele.fcmToken)
+    await sendNofi("عهدة المندوب", "تم معالجة الطلب", dele.fcmToken);
   const orderHis = await prisma.orderHistory.create({
     data: {
       orderId: updatedOrder.id,

@@ -45,12 +45,6 @@ const createMerchant = async (req, res, next) => {
       },
     });
 
-    let x = await sendNofi(
-      "انشاء حساب",
-      "تم انشاء حساب التاجر بنجاح",
-      req.user.fcmToken
-    );
-
     res.json(newMerchant);
   } catch (e) {
     if (e instanceof AppError) {

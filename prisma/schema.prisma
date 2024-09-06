@@ -32,6 +32,7 @@ model Merchant {
   Order        Order[]
   Invoice      Invoice[]
   OrderHistory OrderHistory[]
+  fcmToken     String?
 }
 
 model Order {
@@ -92,6 +93,7 @@ model Delegate {
   OrderHistory OrderHistory[]
   updatedAt    DateTime       @updatedAt
   createAt     DateTime       @default(now())
+  fcmToken     String?
 }
 
 model Super {

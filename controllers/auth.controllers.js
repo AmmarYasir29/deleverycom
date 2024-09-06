@@ -14,8 +14,8 @@ const login = async (req, res, next) => {
       throw new AppError("الرجاء اختيار كلمة مرور صحيحه", 404, 400);
     let user;
     let role;
-    // Merchant Login
     if (loginType == 1) {
+      // Merchant Login
       user = await prisma.merchant.findUnique({
         where: {
           username,
@@ -45,11 +45,25 @@ const login = async (req, res, next) => {
       (() => {
         throw new AppError("كلمة المرور غير صحيحه", 404, 400);
       })();
+    if (loginType == 1) {
+      const merchant = await prisma.merchant.update({
+        where: { id: user.id },
+        data: {
+          fcmToken,
+        },
+      });
+    } else if (loginType == 2) {
+      const delegate = await prisma.delegate.update({
+        where: { id: user.id },
+        data: {
+          fcmToken,
+        },
+      });
+    }
     const payload = {
       user: {
         id: user.id,
         role,
-        fcmToken,
       },
     };
 
