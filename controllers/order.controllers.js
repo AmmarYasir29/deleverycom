@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const sendNofi = require("../helper/sendNofi");
 
 const create = async (req, res) => {
   const {
@@ -806,7 +807,11 @@ const guaranteeOrderDelegate = async (req, res) => {
         orderStatus: 3,
       },
     });
-
+    let x = await sendNofi(
+      "عهدة المندوب",
+      "تم تكليف المندوب بطلب جديد",
+      req.user.fcmToken
+    );
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderId: order.id,
@@ -974,7 +979,11 @@ const processOrder = async (req, res) => {
     where: { id: orderId },
     data: newData,
   });
-
+  let x = await sendNofi(
+    "معالجة الطلب",
+    `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
+    req.user.fcmToken
+  );
   const orderHis = await prisma.orderHistory.create({
     data: {
       orderId: updatedOrder.id,
@@ -1116,6 +1125,11 @@ const editOrder = async (req, res) => {
     // reason = "",
   } = req.body;
 
+  // let x = await sendNofi(
+  //   "عهدة المندوب",
+  //   "تم تكليف المندوب بطلب جديد",
+  //   req.user.fcmToken
+  // );
   const updatedOrder = await prisma.order.update({
     where: { id: orderId },
     data: {
@@ -1127,7 +1141,11 @@ const editOrder = async (req, res) => {
       orderStatus: 3,
     },
   });
-
+  let x = await sendNofi(
+    "معالجة الطلب",
+    "تم معالجة الطلب بنجاح",
+    req.user.fcmToken
+  );
   const orderHis = await prisma.orderHistory.create({
     data: {
       orderId: updatedOrder.id,
