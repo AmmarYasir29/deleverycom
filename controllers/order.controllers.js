@@ -1089,35 +1089,75 @@ const processOrder = async (req, res, next) => {
   let orderId = parseInt(req.query.orderId);
   let newData = req.body;
   if (req.user.role != 3) throw new AppError("ليس لديك صلاحية", 401, 401);
+  let updatedOrder;
   try {
-    const updatedOrder = await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        customerName: newData.customerName,
-        customerPhone: newData.customerPhone,
-        customerPhone2: newData.customerPhone2,
-        customerLat: newData.customerLat,
-        customerLong: newData.customerLong,
-        city: newData.city,
-        area: newData.area,
-        nearestPoint: newData.nearestPoint,
-        orderAmount: newData.orderAmount,
-        orderCount: newData.orderCount,
-        notes: newData.notes,
-        reason: newData.reason,
-        merchantId: newData.merchantId,
-        delegateId: newData.delegateId,
-      },
-    });
-    const dele = await prisma.delegate.findUnique({
-      where: { id: updatedOrder.delegateId },
-    });
-    if (dele.fcmToken)
-      await sendNofi(
-        "معالجة الطلب",
-        `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
-        dele.fcmToken
+    if (newData.orderStatus == 3) {
+      updatedOrder = await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          customerName: newData.customerName,
+          customerPhone: newData.customerPhone,
+          customerPhone2: newData.customerPhone2,
+          customerLat: newData.customerLat,
+          customerLong: newData.customerLong,
+          city: newData.city,
+          area: newData.area,
+          nearestPoint: newData.nearestPoint,
+          orderAmount: newData.orderAmount,
+          orderCount: newData.orderCount,
+          orderStatus: newData.orderStatus,
+          notes: newData.notes,
+          reason: newData.reason,
+          merchantId: newData.merchantId,
+          delegateId: newData.delegateId,
+        },
+      });
+      const dele = await prisma.delegate.findUnique({
+        where: { id: updatedOrder.delegateId },
+      });
+      if (dele.fcmToken)
+        await sendNofi(
+          "معالجة الطلب",
+          `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
+          dele.fcmToken
+        );
+    } else if (newData.orderStatus == 1) {
+      updatedOrder = await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          customerName: newData.customerName,
+          customerPhone: newData.customerPhone,
+          customerPhone2: newData.customerPhone2,
+          customerLat: newData.customerLat,
+          customerLong: newData.customerLong,
+          city: newData.city,
+          area: newData.area,
+          nearestPoint: newData.nearestPoint,
+          orderAmount: newData.orderAmount,
+          orderCount: newData.orderCount,
+          orderStatus: newData.orderStatus,
+          notes: newData.notes,
+          reason: newData.reason,
+          merchantId: newData.merchantId,
+          delegateId: newData.delegateId,
+        },
+      });
+      const mer = await prisma.merchant.findUnique({
+        where: { id: updatedOrder.merchantId },
+      });
+      if (mer.fcmToken)
+        await sendNofi(
+          "معالجة الطلب",
+          `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
+          mer.fcmToken
+        );
+    } else
+      throw new AppError(
+        "اختيار اما تبليغ صاحب البيج او تحويل للمندوب",
+        401,
+        401
       );
+
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderId: updatedOrder.id,
@@ -1131,7 +1171,7 @@ const processOrder = async (req, res, next) => {
         nearestPoint: updatedOrder.nearestPoint,
         orderAmount: updatedOrder.orderAmount,
         orderCount: updatedOrder.orderCount,
-        // orderStatus: 2,
+        orderStatus: updatedOrder.orderStatus,
         notes: updatedOrder.notes,
         // reason,
         merchant: {
