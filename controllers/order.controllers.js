@@ -1121,7 +1121,7 @@ const processOrder = async (req, res, next) => {
           `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
           dele.fcmToken
         );
-    } else if (newData.orderStatus == 1) {
+    } else if (newData.orderStatus == 7) {
       updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: {
