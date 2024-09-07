@@ -47,7 +47,6 @@ const createdelegate = async (req, res, next) => {
       e instanceof Prisma.PrismaClientRustPanicError ||
       e instanceof Prisma.PrismaClientValidationError
     ) {
-      console.log(e.message);
       let msg = e.message.split("Argument");
       next(new PrismaError(e.name, msg[1], 406, 406));
     }
