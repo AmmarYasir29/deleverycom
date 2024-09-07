@@ -990,67 +990,89 @@ const orderRejected = async (req, res) => {
   }
 };
 
-const processOrder = async (req, res) => {
+const processOrder = async (req, res, next) => {
   let orderId = parseInt(req.query.orderId);
   let newData = req.body;
-  if (req.user.role != 3)
-    return res.json({ message: "Edit order just for admin" });
-
-  const updatedOrder = await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      customerName: newData.customerName,
-      customerPhone: newData.customerPhone,
-      customerPhone2: newData.customerPhone2,
-      customerLat: newData.customerLat,
-      customerLong: newData.customerLong,
-      city: newData.city,
-      area: newData.area,
-      nearestPoint: newData.nearestPoint,
-      orderAmount: newData.orderAmount,
-      orderCount: newData.orderCount,
-      notes: newData.notes,
-      reason: newData.reason,
-      merchantId: newData.merchantId,
-      delegateId: newData.delegateId,
-    },
-    newData,
-  });
-
-  let x = await sendNofi(
-    "معالجة الطلب",
-    `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
-    req.user.fcmToken
-  );
-  const orderHis = await prisma.orderHistory.create({
-    data: {
-      orderId: updatedOrder.id,
-      customerName: updatedOrder.customerName,
-      customerPhone: updatedOrder.customerPhone,
-      customerPhone2: updatedOrder.customerPhone2,
-      customerLat: updatedOrder.customerLat,
-      customerLong: updatedOrder.customerLong,
-      city: updatedOrder.city,
-      area: updatedOrder.area,
-      nearestPoint: updatedOrder.nearestPoint,
-      orderAmount: updatedOrder.orderAmount,
-      orderCount: updatedOrder.orderCount,
-      orderStatus: 2,
-      notes: updatedOrder.notes,
-      // reason,
-      merchant: {
-        connect: {
-          id: updatedOrder.merchantId,
+  if (req.user.role != 3) throw new AppError("ليس لديك صلاحية", 401, 401);
+  try {
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        customerName: newData.customerName,
+        customerPhone: newData.customerPhone,
+        customerPhone2: newData.customerPhone2,
+        customerLat: newData.customerLat,
+        customerLong: newData.customerLong,
+        city: newData.city,
+        area: newData.area,
+        nearestPoint: newData.nearestPoint,
+        orderAmount: newData.orderAmount,
+        orderCount: newData.orderCount,
+        notes: newData.notes,
+        reason: newData.reason,
+        merchantId: newData.merchantId,
+        delegateId: newData.delegateId,
+      },
+    });
+    const dele = await prisma.delegate.findUnique({
+      where: { id: updatedOrder.delegateId },
+    });
+    if (dele.fcmToken)
+      await sendNofi(
+        "معالجة الطلب",
+        `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
+        dele.fcmToken
+      );
+    const orderHis = await prisma.orderHistory.create({
+      data: {
+        orderId: updatedOrder.id,
+        customerName: updatedOrder.customerName,
+        customerPhone: updatedOrder.customerPhone,
+        customerPhone2: updatedOrder.customerPhone2,
+        customerLat: updatedOrder.customerLat,
+        customerLong: updatedOrder.customerLong,
+        city: updatedOrder.city,
+        area: updatedOrder.area,
+        nearestPoint: updatedOrder.nearestPoint,
+        orderAmount: updatedOrder.orderAmount,
+        orderCount: updatedOrder.orderCount,
+        // orderStatus: 2,
+        notes: updatedOrder.notes,
+        // reason,
+        merchant: {
+          connect: {
+            id: updatedOrder.merchantId,
+          },
+        },
+        delegate: {
+          connect: {
+            id: updatedOrder.delegateId,
+          },
         },
       },
-      delegate: {
-        connect: {
-          id: updatedOrder.delegateId,
-        },
-      },
-    },
-  });
-  return res.json(updatedOrder);
+    });
+    return res.status(200).json(updatedOrder);
+  } catch (e) {
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientInitializationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`);
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    } else if (
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      console.log(e.message);
+      let msg = e.message.split("Argument");
+      next(new PrismaError(e.name, msg[1], 406, 406));
+    }
+  }
 };
 
 const orderReverted = async (req, res) => {
