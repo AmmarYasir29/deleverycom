@@ -1,7 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
 const sendNofi = require("../helper/sendNofi");
 const requestIp = require("request-ip");
+const PrismaError = require("../helper/PrismaError");
+const AppError = require("../helper/AppError");
+const errorCode = require("../helper/errorCode");
 
 const sendNotificaton = async (req, res, next) => {
   let dataObj = {
@@ -21,6 +24,54 @@ const sendNotificaton = async (req, res, next) => {
     res.status(500).send("Unexpected error: " + error);
   }
 };
+const addEmp = async (req, res, next) => {
+  const { username, password, fullname } = req.body;
+  let english = /^[A-Za-z0-9]*$/;
+  try {
+    if(req.user.role != 3) 
+      throw new AppError("انشاء حساب من صلاحية الادمن", 401, 401);
+    if (username.indexOf(" ") >= 0)
+      throw new AppError("اسم المستخدم يحتوي على مسافة", 406, 406);
+
+    for (i = 0; i < username.length; i++)
+      if (!english.test(username[i]))
+        throw new AppError("اسم المستخدم باللغة الانكليزية فقط", 406, 406);
+
+    const salt = await bcrypt.genSalt(10);
+    const cryptPassword = await bcrypt.hash(password, salt);
+
+    const newEmp = await prisma.Super.create({
+      data: {
+        username,
+        password: cryptPassword,
+        fullname,
+type:3
+      },
+    });
+    res.json(newEmp);
+  } catch (e) {
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientInitializationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`);
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    } else if (
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      let msg = e.message.split("Argument");
+      next(new PrismaError(e.name, msg[1], 406, 406));
+    }
+  }
+
+
+}
 
 const auditSys = async (req, res) => {
   let auditRec = await prisma.ApiAuditLog.findMany();
@@ -39,4 +90,5 @@ module.exports = {
   auditSys,
   sendNotificaton,
   getIp,
+  addEmp
 };

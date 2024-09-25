@@ -8,7 +8,7 @@ const errorCode = require("../helper/errorCode");
 
 const createMerchant = async (req, res, next) => {
   const {
-    fullname,
+    fullname="",
     username,
     password,
     phone,
@@ -197,6 +197,8 @@ const showDebt = async (req, res) => {
 const requestDebt = async (req, res) => {
   const merchantId =
     req.user.role == 1 ? req.user.id : parseInt(req.query.merchantId);
+    const io = req.app.get("socketio");
+
   const updateMerchant = await prisma.merchant.update({
     where: {
       id: merchantId,
@@ -205,17 +207,21 @@ const requestDebt = async (req, res) => {
       moneyReq: true,
     },
   });
+  if(req.user.role == 3)
+  io.emit("requestDebt", {
+    message: "تم طلب الرصيد",
+  });
 
   res.json({ message: `تم طلب الرصيد ${updateMerchant.debt} بنجاح` });
 };
 
-const showAllDebt = async (req, res) => {
+const showDebt = async (req, res) => {
   const merchants = await prisma.merchant.findMany({
     where: {
       debt: {
-        gte: 0,
-      },
-    },
+        gt: 0,
+      }
+        },
     select: {
       id: true,
       fullname: true,
@@ -298,6 +304,6 @@ module.exports = {
   showDebt,
   showStatements,
   requestDebt,
-  showAllDebt,
+  showDebt,
   givenDebt,
 };

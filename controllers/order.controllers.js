@@ -21,6 +21,7 @@ const create = async (req, res, next) => {
     // reason = "",
   } = req.body;
   let merchantId;
+  const io = req.app.get("socketio");
   if (req.user.role != 1) {
     throw new AppError("ليس لديك صلاحية", 401, 401);
   } else if (req.user.role == 1) merchantId = parseInt(req.user.id); // merchant
@@ -47,6 +48,11 @@ const create = async (req, res, next) => {
         },
       },
     });
+
+    io.emit("createdOrder", {
+      message: "تم انشاء طلب جديد برقم: " + order.id,
+    });
+
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderId: newOrder.id,
@@ -70,6 +76,9 @@ const create = async (req, res, next) => {
         },
       },
     });
+
+
+
     res.status(200).json(newOrder);
   } catch (e) {
     if (e instanceof AppError) {

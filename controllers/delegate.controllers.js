@@ -134,6 +134,46 @@ const delegateOrders = async (req, res) => {
   res.json(orders);
 };
 
+const resetpassword = async (req, res) => {
+  try {
+  const { password } = req.body;
+let delegateId = parseInt(req.user.id);
+  if (req.user.role != 4)
+    throw new AppError("ليس لديك صلاحية", 401, 401);
+
+  const salt = await bcrypt.genSalt(10);
+  const cryptPassword = await bcrypt.hash(password, salt);
+  const delePass = await prisma.delegate.update({
+    where: { id: delegateId },
+    data: {
+      password: cryptPassword,
+    },
+  });
+res.json("تم تحديث الرقم السري بنجاح");
+} catch (e) {
+  if (e instanceof AppError) {
+    next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+  } else if (
+    e instanceof Prisma.PrismaClientKnownRequestError ||
+    e instanceof Prisma.PrismaClientInitializationError
+  ) {
+    let msg = errorCode(`${e.code || e.errorCode}`);
+    next(
+      new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+    );
+  } else if (
+    e instanceof Prisma.PrismaClientUnknownRequestError ||
+    e instanceof Prisma.PrismaClientRustPanicError ||
+    e instanceof Prisma.PrismaClientValidationError
+  ) {
+    let msg = e.message.split("Argument");
+    next(new PrismaError(e.name, msg[1], 406, 406));
+  }
+}
+
+
+}
+
 module.exports = {
   delegateOrders,
   createdelegate,
