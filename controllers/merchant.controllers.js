@@ -8,13 +8,13 @@ const errorCode = require("../helper/errorCode");
 
 const createMerchant = async (req, res, next) => {
   const {
-    fullname="",
+    fullname = "",
     username,
     password,
     phone,
     pageName,
     city,
-    area,
+    area = "",
     lat = "0",
     long = "0",
   } = req.body;
@@ -197,7 +197,7 @@ const showDebt = async (req, res) => {
 const requestDebt = async (req, res) => {
   const merchantId =
     req.user.role == 1 ? req.user.id : parseInt(req.query.merchantId);
-    const io = req.app.get("socketio");
+  const io = req.app.get("socketio");
 
   const updateMerchant = await prisma.merchant.update({
     where: {
@@ -207,21 +207,22 @@ const requestDebt = async (req, res) => {
       moneyReq: true,
     },
   });
-  if(req.user.role == 3)
-  io.emit("requestDebt", {
-    message: "تم طلب الرصيد",
-  });
+  if (req.user.role == 3)
+    io.emit("requestDebt", {
+      message: "تم طلب الرصيد",
+    });
 
   res.json({ message: `تم طلب الرصيد ${updateMerchant.debt} بنجاح` });
 };
 
-const showDebt = async (req, res) => {
+const showReqDebt = async (req, res) => {
   const merchants = await prisma.merchant.findMany({
     where: {
       debt: {
         gt: 0,
-      }
-        },
+      },
+      moneyReq: true,
+    },
     select: {
       id: true,
       fullname: true,
@@ -304,6 +305,6 @@ module.exports = {
   showDebt,
   showStatements,
   requestDebt,
-  showDebt,
+  showReqDebt,
   givenDebt,
 };

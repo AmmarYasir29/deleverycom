@@ -5,6 +5,7 @@ const requestIp = require("request-ip");
 const PrismaError = require("../helper/PrismaError");
 const AppError = require("../helper/AppError");
 const errorCode = require("../helper/errorCode");
+var bcrypt = require("bcryptjs");
 
 const sendNotificaton = async (req, res, next) => {
   let dataObj = {
@@ -28,7 +29,7 @@ const addEmp = async (req, res, next) => {
   const { username, password, fullname } = req.body;
   let english = /^[A-Za-z0-9]*$/;
   try {
-    if(req.user.role != 3) 
+    if (req.user.role != 3)
       throw new AppError("انشاء حساب من صلاحية الادمن", 401, 401);
     if (username.indexOf(" ") >= 0)
       throw new AppError("اسم المستخدم يحتوي على مسافة", 406, 406);
@@ -45,10 +46,10 @@ const addEmp = async (req, res, next) => {
         username,
         password: cryptPassword,
         fullname,
-type:3
+        type: 4,
       },
     });
-    res.json(newEmp);
+    res.status(201).json("تم انشاء حساب الموظف بنجاح");
   } catch (e) {
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
@@ -69,9 +70,7 @@ type:3
       next(new PrismaError(e.name, msg[1], 406, 406));
     }
   }
-
-
-}
+};
 
 const auditSys = async (req, res) => {
   let auditRec = await prisma.ApiAuditLog.findMany();
@@ -90,5 +89,5 @@ module.exports = {
   auditSys,
   sendNotificaton,
   getIp,
-  addEmp
+  addEmp,
 };
