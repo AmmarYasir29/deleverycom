@@ -151,7 +151,7 @@ const resetpassword = async (req, res, next) => {
       },
     });
 
-    res.status.json("تم تحديث الرقم السري بنجاح");
+    res.status(200).json("تم تحديث الرقم السري بنجاح");
   } catch (e) {
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));

@@ -1235,6 +1235,7 @@ const editOrderAdmin = async (req, res, next) => {
   let orderId = parseInt(req.query.orderId);
   let newData = req.body;
   let updatedOrder;
+
   try {
     if (newData.orderStatus)
       throw new AppError("ليس لديك صلاحية تعديل حالة الطلب", 406, 406);
