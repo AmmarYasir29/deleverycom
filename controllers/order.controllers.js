@@ -1522,5 +1522,5 @@ module.exports = {
   orderReverted,
   orderHistory,
   editOrderMer,
-  editOrderAdmin,
+  // editOrderAdmin,
 };
