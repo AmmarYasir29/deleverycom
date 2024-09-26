@@ -216,7 +216,28 @@ const requestDebt = async (req, res) => {
 };
 
 const showReqDebt = async (req, res) => {
-  const merchants = await prisma.merchant.findMany({
+  // const merchants = await prisma.merchant.findMany({
+  //   where: {
+  //     debt: {
+  //       gt: 0,
+  //     },
+  //     moneyReq: true,
+  //   },
+  //   select: {
+  //     id: true,
+  //     fullname: true,
+  //     username: true,
+  //     phone: true,
+  //     pageName: true,
+  //     lat: true,
+  //     long: true,
+  //     city: true,
+  //     area: true,
+  //     moneyReq: true,
+  //     debt: true,
+  //   },
+  // });
+  const merchantsWithOrderCount = await prisma.merchant.findMany({
     where: {
       debt: {
         gt: 0,
@@ -229,15 +250,24 @@ const showReqDebt = async (req, res) => {
       username: true,
       phone: true,
       pageName: true,
-      lat: true,
-      long: true,
       city: true,
       area: true,
+      lat: true,
+      long: true,
       moneyReq: true,
       debt: true,
+      _count: {
+        select: {
+          Order: {
+            where: {
+              orderStatus: 4,
+            },
+          },
+        },
+      },
     },
   });
-  res.json(merchants);
+  res.status(200).json(merchantsWithOrderCount);
 };
 
 const givenDebt = async (req, res) => {

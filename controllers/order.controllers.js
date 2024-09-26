@@ -887,10 +887,12 @@ const guaranteeOrderDelegate = async (req, res) => {
         orderStatus: 3,
       },
     });
-    io.emit("guaranteeOrder", {
-      message: "تم استلام الطلب من قبل المندوب: " + order.id,
+    // io.emit("guaranteeOrder", {
+    //   message: "تم استلام الطلب من قبل المندوب: " + order.id,
+    // });
+    io.emit("refresh", {
+      message: " تم استلام الطلب من قبل المندوب:" + order.id,
     });
-
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderId: order.id,
@@ -974,7 +976,9 @@ const orderDelivered = async (req, res) => {
         },
       },
     });
-
+    io.emit("refresh", {
+      message: "تم ايصال الطلب بنجاح " + order.id,
+    });
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderId: order.id,
@@ -1099,30 +1103,11 @@ const orderRejected = async (req, res) => {
 
 const processOrder = async (req, res, next) => {
   let orderId = parseInt(req.query.orderId);
-  let { orderStatus, merchantId, delegateId } = req.body;
-  let updatedStatus;
+  let newData = req.body;
+  if (req.user.role != 3) throw new AppError("ليس لديك صلاحية", 401, 401);
+  let updatedOrder;
   try {
-    if (req.user.role == 1 || req.user.role == 2)
-      throw new AppError("ليس لديك صلاحية", 401, 401);
-    if (!newData.orderStatus) {
-      updatedStatus = await prisma.order.update({
-        where: { id: orderId },
-        data: {
-          orderStatus,
-          merchantId,
-          delegateId,
-        },
-      });
-      const dele = await prisma.delegate.findUnique({
-        where: { id: updatedStatus.delegateId },
-      });
-      if (dele.fcmToken)
-        await sendNofi(
-          "معالجة الطلب",
-          `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
-          dele.fcmToken
-        );
-    } else if (newData.orderStatus == 3) {
+    if (newData.orderStatus == 3) {
       updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: {
@@ -1192,86 +1177,6 @@ const processOrder = async (req, res, next) => {
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderId: updatedOrder.id,
-        orderStatus: updatedOrder.orderStatus,
-        notes: updatedOrder.notes,
-        reason,
-        merchant: {
-          connect: {
-            id: updatedOrder.merchantId,
-          },
-        },
-        delegate: {
-          connect: {
-            id: updatedOrder.delegateId,
-          },
-        },
-      },
-    });
-    console.log("test");
-
-    return res.status(200).json(updatedOrder);
-  } catch (e) {
-    if (e instanceof AppError) {
-      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
-    } else if (
-      e instanceof Prisma.PrismaClientKnownRequestError ||
-      e instanceof Prisma.PrismaClientInitializationError
-    ) {
-      let msg = errorCode(`${e.code || e.errorCode}`);
-      next(
-        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
-      );
-    } else if (
-      e instanceof Prisma.PrismaClientUnknownRequestError ||
-      e instanceof Prisma.PrismaClientRustPanicError ||
-      e instanceof Prisma.PrismaClientValidationError
-    ) {
-      let msg = e.message.split("Argument");
-      next(new PrismaError(e.name, msg[1], 406, 406));
-    }
-  }
-};
-const editOrderAdmin = async (req, res, next) => {
-  let orderId = parseInt(req.query.orderId);
-  let newData = req.body;
-  let updatedOrder;
-
-  try {
-    if (newData.orderStatus)
-      throw new AppError("ليس لديك صلاحية تعديل حالة الطلب", 406, 406);
-    if (req.user.role == 1 || req.user.role == 2)
-      throw new AppError("ليس لديك صلاحية", 401, 401);
-    if (!newData.orderStatus) {
-      updatedOrder = await prisma.order.update({
-        where: { id: orderId },
-        data: {
-          customerName: newData.customerName,
-          customerPhone: newData.customerPhone,
-          customerPhone2: newData.customerPhone2,
-          customerLat: newData.customerLat,
-          customerLong: newData.customerLong,
-          city: newData.city,
-          area: newData.area,
-          nearestPoint: newData.nearestPoint,
-          orderAmount: newData.orderAmount,
-          orderCount: newData.orderCount,
-          // orderStatus: newData.orderStatus,
-          notes: newData.notes,
-          reason: newData.reason,
-          // merchantId: newData.merchantId,
-          delegateId: newData.delegateId,
-        },
-      });
-    } else
-      throw new AppError(
-        "اختيار اما تبليغ صاحب البيج او تحويل للمندوب",
-        401,
-        401
-      );
-
-    const orderHis = await prisma.orderHistory.create({
-      data: {
-        orderId: updatedOrder.id,
         customerName: updatedOrder.customerName,
         customerPhone: updatedOrder.customerPhone,
         customerPhone2: updatedOrder.customerPhone2,
@@ -1284,7 +1189,7 @@ const editOrderAdmin = async (req, res, next) => {
         orderCount: updatedOrder.orderCount,
         orderStatus: updatedOrder.orderStatus,
         notes: updatedOrder.notes,
-        reason,
+        // reason,
         merchant: {
           connect: {
             id: updatedOrder.merchantId,
@@ -1297,7 +1202,6 @@ const editOrderAdmin = async (req, res, next) => {
         },
       },
     });
-
     return res.status(200).json(updatedOrder);
   } catch (e) {
     if (e instanceof AppError) {
@@ -1320,6 +1224,95 @@ const editOrderAdmin = async (req, res, next) => {
     }
   }
 };
+// const editOrderAdmin = async (req, res, next) => {
+//   let orderId = parseInt(req.query.orderId);
+//   let newData = req.body;
+//   let updatedOrder;
+
+//   try {
+//     if (newData.orderStatus)
+//       throw new AppError("ليس لديك صلاحية تعديل حالة الطلب", 406, 406);
+//     if (req.user.role == 1 || req.user.role == 2)
+//       throw new AppError("ليس لديك صلاحية", 401, 401);
+//     if (!newData.orderStatus) {
+//       updatedOrder = await prisma.order.update({
+//         where: { id: orderId },
+//         data: {
+//           customerName: newData.customerName,
+//           customerPhone: newData.customerPhone,
+//           customerPhone2: newData.customerPhone2,
+//           customerLat: newData.customerLat,
+//           customerLong: newData.customerLong,
+//           city: newData.city,
+//           area: newData.area,
+//           nearestPoint: newData.nearestPoint,
+//           orderAmount: newData.orderAmount,
+//           orderCount: newData.orderCount,
+//           // orderStatus: newData.orderStatus,
+//           notes: newData.notes,
+//           reason: newData.reason,
+//           // merchantId: newData.merchantId,
+//           delegateId: newData.delegateId,
+//         },
+//       });
+//     } else
+//       throw new AppError(
+//         "اختيار اما تبليغ صاحب البيج او تحويل للمندوب",
+//         401,
+//         401
+//       );
+
+//     const orderHis = await prisma.orderHistory.create({
+//       data: {
+//         orderId: updatedOrder.id,
+//         customerName: updatedOrder.customerName,
+//         customerPhone: updatedOrder.customerPhone,
+//         customerPhone2: updatedOrder.customerPhone2,
+//         customerLat: updatedOrder.customerLat,
+//         customerLong: updatedOrder.customerLong,
+//         city: updatedOrder.city,
+//         area: updatedOrder.area,
+//         nearestPoint: updatedOrder.nearestPoint,
+//         orderAmount: updatedOrder.orderAmount,
+//         orderCount: updatedOrder.orderCount,
+//         orderStatus: updatedOrder.orderStatus,
+//         notes: updatedOrder.notes,
+//         reason,
+//         merchant: {
+//           connect: {
+//             id: updatedOrder.merchantId,
+//           },
+//         },
+//         delegate: {
+//           connect: {
+//             id: updatedOrder.delegateId,
+//           },
+//         },
+//       },
+//     });
+
+//     return res.status(200).json(updatedOrder);
+//   } catch (e) {
+//     if (e instanceof AppError) {
+//       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+//     } else if (
+//       e instanceof Prisma.PrismaClientKnownRequestError ||
+//       e instanceof Prisma.PrismaClientInitializationError
+//     ) {
+//       let msg = errorCode(`${e.code || e.errorCode}`);
+//       next(
+//         new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+//       );
+//     } else if (
+//       e instanceof Prisma.PrismaClientUnknownRequestError ||
+//       e instanceof Prisma.PrismaClientRustPanicError ||
+//       e instanceof Prisma.PrismaClientValidationError
+//     ) {
+//       let msg = e.message.split("Argument");
+//       next(new PrismaError(e.name, msg[1], 406, 406));
+//     }
+//   }
+// };
 
 const orderReverted = async (req, res) => {
   let orderId = parseInt(req.query.orderId);
