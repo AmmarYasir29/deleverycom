@@ -54,7 +54,7 @@ model Order {
   merchantId     Int
   delegate       Delegate? @relation(fields: [delegateId], references: [id])
   delegateId     Int?
-  ReceiptNum     Int?      @unique
+  receiptNum     Int       @unique
   createAt       DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 }
@@ -77,6 +77,7 @@ model OrderHistory {
   reason         String?
   merchant       Merchant  @relation(fields: [merchantId], references: [id])
   merchantId     Int
+  receiptNum     Int?
   delegate       Delegate? @relation(fields: [delegateId], references: [id])
   delegateId     Int?
   createAt       DateTime  @default(now())

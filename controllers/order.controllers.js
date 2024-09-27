@@ -18,14 +18,17 @@ const create = async (req, res, next) => {
     orderAmount,
     orderCount,
     notes,
+    receiptNum,
     // reason = "",
   } = req.body;
   let merchantId;
   const io = req.app.get("socketio");
-  if (req.user.role != 1) {
-    throw new AppError("ليس لديك صلاحية", 401, 401);
-  } else if (req.user.role == 1) merchantId = parseInt(req.user.id); // merchant
   try {
+    if (req.user.role != 1) {
+      throw new AppError("ليس لديك صلاحية", 401, 401);
+    } else if (req.user.role == 1) merchantId = parseInt(req.user.id); // merchant
+
+    if (!receiptNum) throw new AppError("يجب اختيار رقم وصل", 406, 406);
     const newOrder = await prisma.order.create({
       data: {
         customerName,
@@ -40,6 +43,7 @@ const create = async (req, res, next) => {
         orderCount,
         orderStatus: 1,
         notes,
+        receiptNum,
         // reason,
         merchant: {
           connect: {
@@ -48,14 +52,12 @@ const create = async (req, res, next) => {
         },
       },
     });
-
     // io.emit("createdOrder", {
     //   message: "تم انشاء طلب جديد برقم: " + order.id,
     // });
     io.emit("refresh", {
-      message: "تم انشاء طلب جديد برقم: تحربة" + order.id,
+      message: "تم انشاء طلب جديد برقم: تحربة" + newOrder.id,
     });
-
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderId: newOrder.id,
@@ -71,6 +73,7 @@ const create = async (req, res, next) => {
         orderCount,
         orderStatus: 1,
         notes,
+        receiptNum,
         // reason,
         merchant: {
           connect: {
@@ -79,7 +82,6 @@ const create = async (req, res, next) => {
         },
       },
     });
-
     res.status(200).json(newOrder);
   } catch (e) {
     if (e instanceof AppError) {
