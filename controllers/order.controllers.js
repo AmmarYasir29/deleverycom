@@ -53,7 +53,7 @@ const create = async (req, res, next) => {
     //   message: "تم انشاء طلب جديد برقم: " + order.id,
     // });
     io.emit("refresh", {
-      message: "تم انشاء طلب جديد برقم: " + order.id,
+      message: "تم انشاء طلب جديد برقم: تحربة" + order.id,
     });
 
     const orderHis = await prisma.orderHistory.create({
@@ -895,7 +895,7 @@ const guaranteeOrderDelegate = async (req, res) => {
     //   message: "تم استلام الطلب من قبل المندوب: " + order.id,
     // });
     io.emit("refresh", {
-      message: " تم استلام الطلب من قبل المندوب:" + order.id,
+      message: " تم استلام الطلب من قبل المندوب :تحربة" + order.id,
     });
     const orderHis = await prisma.orderHistory.create({
       data: {
@@ -981,7 +981,7 @@ const orderDelivered = async (req, res, next) => {
       },
     });
     io.emit("refresh", {
-      message: "تم ايصال الطلب بنجاح " + order.id,
+      message: "تم ايصال الطلب بنجاح تجربة" + order.id,
     });
     const orderHis = await prisma.orderHistory.create({
       data: {
