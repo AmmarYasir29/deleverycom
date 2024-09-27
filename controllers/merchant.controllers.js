@@ -299,6 +299,12 @@ const givenDebt = async (req, res) => {
       debt: 0,
     },
   });
+  if (merchant.fcmToken)
+    await sendNofi(
+      "تصفير الحساب تجربة",
+      "تمت معالجة الطلب وبأنتظار التسليم",
+      dele.fcmToken
+    );
 
   res.json({ message: "تم تصفير الرصيد" });
 };

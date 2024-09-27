@@ -14,6 +14,7 @@ orderRoute.put("/revert", controllers.orderReverted);
 orderRoute.get("/getOrder", controllers.getOrder);
 orderRoute.get("/orderStatus", controllers.OrdersBasedOnStatus);
 orderRoute.get("/orderHis", controllers.orderHistory);
+orderRoute.put("/receiptNum", controllers.addReceiptNum);
 // orderRoute.put("/editOrderAdmin", controllers.editOrderAdmin);
 
 module.exports = orderRoute;

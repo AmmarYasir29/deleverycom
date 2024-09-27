@@ -820,10 +820,14 @@ const assignOrderDelegate = async (req, res) => {
       where: { id: order.delegateId },
     });
     if (dele.fcmToken)
-      await sendNofi("عهدة المندوب", "تمت معالجة الطلب", dele.fcmToken);
-    io.emit("refresh", {
-      message: "تم تكليف مندوب بطلب جديد من قبل الشركة: " + order.id,
-    });
+      await sendNofi(
+        "عهدة المندوب تجربة",
+        "لديك طلب يحتاج الى استلام",
+        dele.fcmToken
+      );
+    // io.emit("refresh", {
+    //   message: "تم تكليف مندوب بطلب جديد من قبل الشركة: " + order.id,
+    // });
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderId: order.id,
@@ -945,7 +949,7 @@ const guaranteeOrderDelegate = async (req, res) => {
   }
 };
 
-const orderDelivered = async (req, res) => {
+const orderDelivered = async (req, res, next) => {
   let orderId = parseInt(req.query.orderId);
   try {
     if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
@@ -1379,7 +1383,8 @@ const orderReverted = async (req, res) => {
 
 const orderHistory = async (req, res) => {
   try {
-    if (req.user.role != 3) throw new AppError("ليس لديك صلاحية", 401, 401);
+    if (req.user.role == 1 || req.user.role == 2)
+      throw new AppError("ليس لديك صلاحية", 401, 401);
 
     if (req.query.orderId == null)
       throw new AppError("يجب اختيار طلب", 406, 406);
@@ -1510,6 +1515,79 @@ const editOrderMer = async (req, res) => {
   }
 };
 
+const addReceiptNum = async (req, res, next) => {
+  try {
+    if (!req.query.orderId || !req.query.receiptNum)
+      throw new AppError("يجب اختيار طلب ورقم طلب", 406, 406);
+
+    let orderId = parseInt(req.query.orderId);
+    let receiptNum = parseInt(req.query.receiptNum);
+
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        ReceiptNum: receiptNum,
+      },
+    });
+    const orderHis = await prisma.orderHistory.create({
+      data: {
+        orderId: updatedOrder.id,
+        customerName: updatedOrder.customerName,
+        customerPhone: updatedOrder.customerPhone,
+        customerPhone2: updatedOrder.customerPhone2,
+        customerLat: updatedOrder.customerLat,
+        customerLong: updatedOrder.customerLong,
+        city: updatedOrder.city,
+        area: updatedOrder.area,
+        nearestPoint: updatedOrder.nearestPoint,
+        orderAmount: updatedOrder.orderAmount,
+        orderCount: updatedOrder.orderCount,
+        orderStatus: updatedOrder.orderStatus,
+        notes: updatedOrder.notes,
+        ReceiptNum: updatedOrder.receiptNum,
+        // reason,
+        merchant: {
+          connect: {
+            id: updatedOrder.merchantId,
+          },
+        },
+        // delegate: {
+        //   connect: {
+        //     id: updatedOrder.delegateId?,
+        //   },
+        // },
+      },
+    });
+
+    return res.status(200).json("تم اضافة الوصل الى الطلب بنجاح");
+  } catch (e) {
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientInitializationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`);
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    } else if (
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      // console.log(e);
+
+      let msg = e.message.split("Argument");
+      // || e.message.split("argument")[1].trim();
+      // console.log("e.message: " + e.message);
+      // console.log("msg: " + msg);
+
+      next(new PrismaError(e.name, msg[1], 406, 406));
+    }
+  }
+};
+
 module.exports = {
   create,
   getOrder,
@@ -1522,5 +1600,6 @@ module.exports = {
   orderReverted,
   orderHistory,
   editOrderMer,
+  addReceiptNum,
   // editOrderAdmin,
 };

@@ -54,6 +54,7 @@ model Order {
   merchantId     Int
   delegate       Delegate? @relation(fields: [delegateId], references: [id])
   delegateId     Int?
+  ReceiptNum     Int?      @unique
   createAt       DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 }
