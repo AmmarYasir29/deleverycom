@@ -25,7 +25,11 @@ const createMerchant = async (req, res, next) => {
 
     for (i = 0; i < username.length; i++)
       if (!english.test(username[i]))
-        throw new AppError("اسم المستخدم باللغة الانكليزية فقط", 406, 406);
+        throw new AppError(
+          "اسم المستخدم يحتوي احرف اللغة الانكليزية وارقام فقط",
+          406,
+          406
+        );
 
     const salt = await bcrypt.genSalt(10);
     const cryptPassword = await bcrypt.hash(password, salt);
@@ -45,7 +49,7 @@ const createMerchant = async (req, res, next) => {
       },
     });
 
-    res.json(newMerchant);
+    res.status(200).json(newMerchant);
   } catch (e) {
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
@@ -68,92 +72,117 @@ const createMerchant = async (req, res, next) => {
   }
 };
 
-const showMerchants = async (req, res) => {
+const showMerchants = async (req, res, next) => {
   let users;
   let city = req.query.merchantCity ? req.query.merchantCity : "";
-  let name = req.query.merchantName ? req.query.merchantName : "";
-  if (city != "") {
-    users = await prisma.merchant.findMany({
-      where: {
-        city: {
-          contains: city,
-          // search: city,
+  let name = req.query.pageName ? req.query.pageName : "";
+  try {
+    if (req.user.role == 1 || req.user.role == 2) {
+      throw new AppError("ليس لديك صلاحية", 401, 401);
+    }
+
+    if (city != "") {
+      users = await prisma.merchant.findMany({
+        where: {
+          city: {
+            contains: city,
+            // search: city,
+          },
         },
-      },
-      select: {
-        id: true,
-        fullname: true,
-        username: true,
-        phone: true,
-        city: true,
-        area: true,
-        pageName: true,
-        debt: true,
-        lat: true,
-        long: true,
-      },
-    });
-  } else if (name != "") {
-    users = await prisma.merchant.findMany({
-      where: {
-        fullname: {
-          contains: name,
+        select: {
+          id: true,
+          fullname: true,
+          username: true,
+          phone: true,
+          city: true,
+          area: true,
+          pageName: true,
+          debt: true,
+          lat: true,
+          long: true,
         },
-      },
-      select: {
-        id: true,
-        fullname: true,
-        username: true,
-        phone: true,
-        city: true,
-        area: true,
-        pageName: true,
-        debt: true,
-        lat: true,
-        long: true,
-      },
-    });
-  } else if (name != "" && city != "") {
-    users = await prisma.merchant.findMany({
-      where: {
-        fullname: {
-          contains: name,
+      });
+    } else if (name != "") {
+      users = await prisma.merchant.findMany({
+        where: {
+          pageName: {
+            contains: name,
+          },
         },
-        city: {
-          contains: city,
-          // search: city,
+        select: {
+          id: true,
+          fullname: true,
+          username: true,
+          phone: true,
+          city: true,
+          area: true,
+          pageName: true,
+          debt: true,
+          lat: true,
+          long: true,
         },
-      },
-      select: {
-        id: true,
-        fullname: true,
-        username: true,
-        phone: true,
-        city: true,
-        area: true,
-        pageName: true,
-        debt: true,
-        lat: true,
-        long: true,
-      },
-    });
-  } else {
-    users = await prisma.merchant.findMany({
-      select: {
-        id: true,
-        fullname: true,
-        username: true,
-        phone: true,
-        city: true,
-        area: true,
-        pageName: true,
-        debt: true,
-        lat: true,
-        long: true,
-      },
-    });
+      });
+    } else if (name != "" && city != "") {
+      users = await prisma.merchant.findMany({
+        where: {
+          fullname: {
+            contains: name,
+          },
+          city: {
+            contains: city,
+            // search: city,
+          },
+        },
+        select: {
+          id: true,
+          fullname: true,
+          username: true,
+          phone: true,
+          city: true,
+          area: true,
+          pageName: true,
+          debt: true,
+          lat: true,
+          long: true,
+        },
+      });
+    } else {
+      users = await prisma.merchant.findMany({
+        select: {
+          id: true,
+          fullname: true,
+          username: true,
+          phone: true,
+          city: true,
+          area: true,
+          pageName: true,
+          debt: true,
+          lat: true,
+          long: true,
+        },
+      });
+    }
+    res.status(200).json(users || []);
+  } catch (e) {
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientInitializationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`);
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    } else if (
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      let msg = e.message.split("Argument");
+      next(new PrismaError(e.name, msg[1], 406, 406));
+    }
   }
-  res.json(users || []);
 };
 
 const showDebt = async (req, res) => {

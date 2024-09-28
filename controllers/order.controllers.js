@@ -167,7 +167,7 @@ const getOrder = async (req, res) => {
   }
 };
 
-const OrdersBasedOnStatus = async (req, res) => {
+const OrdersBasedOnStatus = async (req, res, next) => {
   const take = parseInt(req.query.PAGE_SIZE) || 25;
   const pageNumber = parseInt(req.query.pageNumber) || 0;
   const skip = (pageNumber - 1) * take;
@@ -183,7 +183,7 @@ const OrdersBasedOnStatus = async (req, res) => {
   else if (req.user.role == 2) delegate = parseInt(req.user.id); // delegate
   try {
     if (orderNumber != 0) {
-      const orders = await prisma.order.findMany({
+      const order = await prisma.order.findMany({
         where: {
           id: orderNumber,
         },
@@ -209,7 +209,12 @@ const OrdersBasedOnStatus = async (req, res) => {
           },
         },
       });
-      return res.json(orders ? { data: orders } : []);
+      if (
+        order.merchantId != orderNumber &&
+        (req.user.role == 1 || req.user.role == 2)
+      )
+        return res.status(401).json("يمكن البحث عن طلبات التاجر الحالي فقط");
+      if (order) return res.json(order ? { data: order } : []);
     }
 
     if (req.user.role == 2) {
@@ -804,13 +809,14 @@ const OrdersBasedOnStatus = async (req, res) => {
   }
 };
 
-const assignOrderDelegate = async (req, res) => {
+const assignOrderDelegate = async (req, res, next) => {
   let delegateId = parseInt(req.query.delegateId);
   let orderId = parseInt(req.query.orderId);
   const io = req.app.get("socketio");
 
   try {
-    if (req.user.role != 3) throw new AppError("ليس لديك صلاحية", 401, 401);
+    if (req.user.role == 1 || req.user.role == 2)
+      throw new AppError("ليس لديك صلاحية", 401, 401);
     const order = await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -858,7 +864,8 @@ const assignOrderDelegate = async (req, res) => {
         },
       },
     });
-    res.json(order);
+
+    res.status(200).json(order);
   } catch (e) {
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
@@ -968,12 +975,12 @@ const orderDelivered = async (req, res, next) => {
     const merchant = await prisma.merchant.update({
       where: { id: order.merchantId },
       data: {
-        debt: { increment: order.orderAmount },
+        debt: { increment: order.orderAmount * order.orderCount },
       },
     });
     const invoice = await prisma.invoice.create({
       data: {
-        amount: order.orderAmount,
+        amount: order.orderAmount * order.orderCount,
         type: 1,
         merchant: {
           connect: {
@@ -1110,10 +1117,31 @@ const orderRejected = async (req, res) => {
 const processOrder = async (req, res, next) => {
   let orderId = parseInt(req.query.orderId);
   let newData = req.body;
-  if (req.user.role != 3) throw new AppError("ليس لديك صلاحية", 401, 401);
   let updatedOrder;
   try {
-    if (newData.orderStatus == 3) {
+    curOrder = await prisma.order.findUnique({ where: { id: orderId } });
+    if (req.user.role == 1 || req.user.role == 2)
+      throw new AppError("ليس لديك صلاحية", 401, 401);
+    if (curOrder.orderStatus == newData.orderStatus) {
+      updatedOrder = await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          customerName: newData.customerName,
+          customerPhone: newData.customerPhone,
+          customerPhone2: newData.customerPhone2,
+          city: newData.city,
+          area: newData.area,
+          nearestPoint: newData.nearestPoint,
+          orderAmount: newData.orderAmount,
+          orderCount: newData.orderCount,
+          notes: newData.notes,
+          reason: newData.reason,
+          merchantId: newData.merchantId,
+          delegateId: newData.delegateId,
+        },
+      });
+    } else if (curOrder.orderStatus == 5 && newData.orderStatus == 3) {
+      // status from reject to assign delegate
       updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: {
@@ -1143,7 +1171,13 @@ const processOrder = async (req, res, next) => {
           `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
           dele.fcmToken
         );
-    } else if (newData.orderStatus == 7) {
+    } else if (curOrder.orderStatus == 5 && newData.orderStatus == 7) {
+    } else if (curOrder.orderStatus == 4 && newData.orderStatus == 6) {
+      if (
+        newData.orderAmount != curOrder.orderAmount ||
+        newData.orderCount != curOrder.orderCount
+      )
+        throw new AppError("لا يمكن تغير سعر طلب تم احتسابه", 406, 406);
       updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: {
@@ -1155,8 +1189,6 @@ const processOrder = async (req, res, next) => {
           city: newData.city,
           area: newData.area,
           nearestPoint: newData.nearestPoint,
-          orderAmount: newData.orderAmount,
-          orderCount: newData.orderCount,
           orderStatus: newData.orderStatus,
           notes: newData.notes,
           reason: newData.reason,
@@ -1169,13 +1201,41 @@ const processOrder = async (req, res, next) => {
       });
       if (mer.fcmToken)
         await sendNofi(
-          "معالجة الطلب",
+          "ارجاع الطلب",
           `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
           mer.fcmToken
         );
+      const dele = await prisma.delegate.findUnique({
+        where: { id: updatedOrder.delegateId },
+      });
+      if (dele.fcmToken)
+        await sendNofi(
+          "ارجاع الطلب",
+          `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
+          dele.fcmToken
+        );
+      const merchant = await prisma.merchant.update({
+        where: { id: updatedOrder.merchantId },
+        data: {
+          debt: {
+            increment: -(updatedOrder.orderAmount * updatedOrder.orderCount),
+          },
+        },
+      });
+      const invoice = await prisma.invoice.create({
+        data: {
+          amount: updatedOrder.orderAmount * updatedOrder.orderCount,
+          type: 3,
+          merchant: {
+            connect: {
+              id: updatedOrder.merchantId,
+            },
+          },
+        },
+      });
     } else
       throw new AppError(
-        "اختيار اما تبليغ صاحب البيج او تحويل للمندوب",
+        "اختيار حالة الطلب اما تم ارجاعة او عدم استلام او عهدة مندوب",
         401,
         401
       );
@@ -1195,7 +1255,8 @@ const processOrder = async (req, res, next) => {
         orderCount: updatedOrder.orderCount,
         orderStatus: updatedOrder.orderStatus,
         notes: updatedOrder.notes,
-        // reason,
+        reason: updatedOrder.reason,
+        receiptNum: updatedOrder.receiptNum,
         merchant: {
           connect: {
             id: updatedOrder.merchantId,
@@ -1383,7 +1444,7 @@ const orderReverted = async (req, res) => {
   }
 };
 
-const orderHistory = async (req, res) => {
+const orderHistory = async (req, res, next) => {
   try {
     if (req.user.role == 1 || req.user.role == 2)
       throw new AppError("ليس لديك صلاحية", 401, 401);

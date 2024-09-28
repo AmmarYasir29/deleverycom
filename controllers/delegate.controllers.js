@@ -15,7 +15,11 @@ const createdelegate = async (req, res, next) => {
 
     for (i = 0; i < username.length; i++)
       if (!english.test(username[i]))
-        throw new AppError("اسم المستخدم باللغة الانكليزية فقط", 406, 406);
+        throw new AppError(
+          "اسم المستخدم يحتوي احرف اللغة الانكليزية وارقام فقط",
+          406,
+          406
+        );
 
     const salt = await bcrypt.genSalt(10);
     const cryptPassword = await bcrypt.hash(password, salt);
@@ -30,7 +34,7 @@ const createdelegate = async (req, res, next) => {
         area,
       },
     });
-    res.json(newDelegate);
+    res.status(200).json(newDelegate);
   } catch (e) {
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
@@ -121,7 +125,7 @@ const showdelegate = async (req, res) => {
       },
     });
   }
-  res.json(users);
+  res.status(200).json(users);
 };
 
 const delegateOrders = async (req, res) => {
