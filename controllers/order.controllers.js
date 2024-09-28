@@ -1122,7 +1122,7 @@ const processOrder = async (req, res, next) => {
     curOrder = await prisma.order.findUnique({ where: { id: orderId } });
     if (req.user.role == 1 || req.user.role == 2)
       throw new AppError("ليس لديك صلاحية", 401, 401);
-    if (curOrder.orderStatus == newData.orderStatus) {
+    if (!newData.orderStatus || curOrder.orderStatus == newData.orderStatus) {
       updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: {
@@ -1257,16 +1257,8 @@ const processOrder = async (req, res, next) => {
         notes: updatedOrder.notes,
         reason: updatedOrder.reason,
         receiptNum: updatedOrder.receiptNum,
-        merchant: {
-          connect: {
-            id: updatedOrder.merchantId,
-          },
-        },
-        delegate: {
-          connect: {
-            id: updatedOrder.delegateId,
-          },
-        },
+        merchantId: updatedOrder.merchantId,
+        delegateId: updatedOrder.delegateId,
       },
     });
     return res.status(200).json(updatedOrder);
