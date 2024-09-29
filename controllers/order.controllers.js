@@ -61,20 +61,19 @@ const create = async (req, res, next) => {
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderId: newOrder.id,
-        customerName,
-        customerPhone,
-        customerPhone2,
+        customerName: newOrder.customerName,
+        customerPhone: newOrder.customerPhone,
+        customerPhone2: newOrder.customerPhone2,
         customerLat,
         customerLong,
-        city,
-        area,
-        nearestPoint,
-        orderAmount,
-        orderCount,
+        city: newOrder.city,
+        area: newOrder.area,
+        nearestPoint: newOrder.nearestPoint,
+        orderAmount: newOrder.orderAmount,
+        orderCount: newOrder.orderCount,
         orderStatus: 1,
-        notes,
-        receiptNum,
-        // reason,
+        notes: newOrder.notes,
+        receiptNum: newOrder.receiptNum,
         merchant: {
           connect: {
             id: merchantId,
@@ -851,7 +850,7 @@ const assignOrderDelegate = async (req, res, next) => {
         orderCount: order.orderCount,
         orderStatus: 2,
         notes: order.notes,
-        // reason,
+        receiptNum: order.receiptNum,
         merchant: {
           connect: {
             id: order.merchantId,
@@ -888,11 +887,12 @@ const assignOrderDelegate = async (req, res, next) => {
   }
 };
 
-const guaranteeOrderDelegate = async (req, res) => {
+const guaranteeOrderDelegate = async (req, res, next) => {
   let orderId = parseInt(req.query.orderId);
   const io = req.app.get("socketio");
   try {
-    if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
+    if (req.user.role != 2)
+      throw new AppError("ليس لديك صلاحية الاستلام", 401, 401);
 
     const order = await prisma.order.update({
       where: { id: orderId },
@@ -921,7 +921,8 @@ const guaranteeOrderDelegate = async (req, res) => {
         orderCount: order.orderCount,
         orderStatus: 3,
         notes: order.notes,
-        // reason,
+        receiptNum: order.receiptNum,
+        reason: order.reason,
         merchant: {
           connect: {
             id: order.merchantId,
@@ -934,8 +935,7 @@ const guaranteeOrderDelegate = async (req, res) => {
         },
       },
     });
-
-    res.json(order);
+    res.status(200).json(order);
   } catch (e) {
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
@@ -960,13 +960,15 @@ const guaranteeOrderDelegate = async (req, res) => {
 
 const orderDelivered = async (req, res, next) => {
   let orderId = parseInt(req.query.orderId);
+  const io = req.app.get("socketio");
+
   try {
     if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
 
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-    });
-    const updatedOrder = await prisma.order.update({
+    // const order = await prisma.order.findUnique({
+    //   where: { id: orderId },
+    // });
+    const order = await prisma.order.update({
       where: { id: orderId },
       data: {
         orderStatus: 4,
@@ -992,6 +994,9 @@ const orderDelivered = async (req, res, next) => {
     io.emit("refresh", {
       message: "تم ايصال الطلب بنجاح تجربة" + order.id,
     });
+    if (merchant.fcmToken)
+      await sendNofi("تم تسليم الطلب", "تم تسليم الطلب", merchant.fcmToken);
+
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderId: order.id,
@@ -1007,7 +1012,8 @@ const orderDelivered = async (req, res, next) => {
         orderCount: order.orderCount,
         orderStatus: 4,
         notes: order.notes,
-        // reason,
+        reason: order.reason,
+        receiptNum: order.receiptNum,
         merchant: {
           connect: {
             id: order.merchantId,
@@ -1020,7 +1026,7 @@ const orderDelivered = async (req, res, next) => {
         },
       },
     });
-    res.json({ order, merchant });
+    res.status(200).json({ order, merchant });
   } catch (e) {
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
@@ -1043,19 +1049,24 @@ const orderDelivered = async (req, res, next) => {
   }
 };
 
-const orderRejected = async (req, res) => {
+const orderRejected = async (req, res, next) => {
   let orderId = parseInt(req.query.orderId);
   let reason = req.body.reason;
   const io = req.app.get("socketio");
   try {
-    if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
+    if (req.user.role != 2)
+      throw new AppError("ليس لديك صلاحية رفض الطلب", 401, 401);
 
+    if (!reason) throw new AppError("يجب اختيار سبب", 406, 406);
     const order = await prisma.order.update({
       where: { id: orderId },
       data: {
         orderStatus: 5,
         reason,
       },
+    });
+    const merchant = await prisma.merchant.findUnique({
+      where: { id: order.merchantId },
     });
 
     const orderHis = await prisma.orderHistory.create({
@@ -1073,7 +1084,8 @@ const orderRejected = async (req, res) => {
         orderCount: order.orderCount,
         orderStatus: 5,
         notes: order.notes,
-        // reason,
+        reason: order.reason,
+        receiptNum: order.receiptNum,
         merchant: {
           connect: {
             id: order.merchantId,
@@ -1088,10 +1100,17 @@ const orderRejected = async (req, res) => {
     });
 
     io.emit("rejectOrder", {
-      message: "Order rejected num: " + order.id,
+      message: "تم رفض الطلب رقم: " + order.id,
     });
 
-    res.json(order);
+    if (merchant.fcmToken)
+      await sendNofi(
+        "تم رفض الطلب تجربة",
+        `تم رفض الطلب رقم${order.id} بسبب ${order.reason}`,
+        merchant.fcmToken
+      );
+
+    res.status(200).json(order);
   } catch (e) {
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
