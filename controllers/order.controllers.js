@@ -43,7 +43,7 @@ const create = async (req, res, next) => {
         orderCount,
         orderStatus: 1,
         notes,
-        receiptNum,
+        id: receiptNum,
         // reason,
         merchant: {
           connect: {
@@ -60,7 +60,7 @@ const create = async (req, res, next) => {
     });
     const orderHis = await prisma.orderHistory.create({
       data: {
-        orderId: newOrder.id,
+        orderIdPK: newOrder.idPK,
         customerName: newOrder.customerName,
         customerPhone: newOrder.customerPhone,
         customerPhone2: newOrder.customerPhone2,
@@ -73,7 +73,7 @@ const create = async (req, res, next) => {
         orderCount: newOrder.orderCount,
         orderStatus: 1,
         notes: newOrder.notes,
-        receiptNum: newOrder.receiptNum,
+        orderId: newOrder.id,
         merchant: {
           connect: {
             id: merchantId,
@@ -828,7 +828,7 @@ const assignOrderDelegate = async (req, res, next) => {
     });
     if (dele.fcmToken)
       await sendNofi(
-        "عهدة المندوب تجربة",
+        "عهدة المندوب",
         "لديك طلب يحتاج الى استلام",
         dele.fcmToken
       );
@@ -965,9 +965,12 @@ const orderDelivered = async (req, res, next) => {
   try {
     if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
 
-    // const order = await prisma.order.findUnique({
-    //   where: { id: orderId },
-    // });
+    const curOrder = await prisma.order.findUnique({
+      where: { id: orderId },
+    });
+    if (curOrder.orderStatus == 4)
+      throw new AppError("الطلب تم ايصاله مسبقا", 406, 406);
+
     const order = await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -1028,6 +1031,8 @@ const orderDelivered = async (req, res, next) => {
     });
     res.status(200).json({ order, merchant });
   } catch (e) {
+    console.log(e);
+
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
     } else if (
@@ -1187,10 +1192,42 @@ const processOrder = async (req, res, next) => {
       if (dele.fcmToken)
         await sendNofi(
           "معالجة الطلب",
-          `تم معالجة الطلب ${updatedOrder.id} بنجاح`,
+          "تمت معالجة الطلب وبأنتظار التسليم",
           dele.fcmToken
         );
     } else if (curOrder.orderStatus == 5 && newData.orderStatus == 7) {
+      updatedOrder = await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          customerName: newData.customerName,
+          customerPhone: newData.customerPhone,
+          customerPhone2: newData.customerPhone2,
+          customerLat: newData.customerLat,
+          customerLong: newData.customerLong,
+          city: newData.city,
+          area: newData.area,
+          nearestPoint: newData.nearestPoint,
+          orderStatus: newData.orderStatus,
+          notes: newData.notes,
+          reason: newData.reason,
+          merchantId: newData.merchantId,
+          delegateId: newData.delegateId,
+        },
+      });
+      const mer = await prisma.merchant.findUnique({
+        where: { id: updatedOrder.merchantId },
+      });
+      if (mer.fcmToken)
+        await sendNofi("عدم استلام", "لديك طلب يحتاج الى معالجة", mer.fcmToken);
+      const dele = await prisma.delegate.findUnique({
+        where: { id: updatedOrder.delegateId },
+      });
+      if (dele.fcmToken)
+        await sendNofi(
+          "عدم استلام",
+          "لديك طلب يحتاج الى معالجة",
+          dele.fcmToken
+        );
     } else if (curOrder.orderStatus == 4 && newData.orderStatus == 6) {
       if (
         newData.orderAmount != curOrder.orderAmount ||
@@ -1254,7 +1291,7 @@ const processOrder = async (req, res, next) => {
       });
     } else
       throw new AppError(
-        "اختيار حالة الطلب اما تم ارجاعة او عدم استلام او عهدة مندوب",
+        "اختيار حالة الطلب اما نفسها او تم ارجاعة او عدم استلام او عهدة مندوب",
         401,
         401
       );
