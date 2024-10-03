@@ -9,7 +9,7 @@ const create = async (req, res, next) => {
   const {
     customerName,
     customerPhone,
-    customerPhone2,
+    customerPhone2 = "",
     customerLat = "0",
     customerLong = "0",
     city,
@@ -56,7 +56,7 @@ const create = async (req, res, next) => {
     //   message: "تم انشاء طلب جديد برقم: " + order.id,
     // });
     io.emit("refresh", {
-      message: "تم انشاء طلب جديد برقم: تحربة" + newOrder.id,
+      message: "تم انشاء طلب جديد برقم" + newOrder.id,
     });
     const orderHis = await prisma.orderHistory.create({
       data: {
@@ -837,6 +837,7 @@ const assignOrderDelegate = async (req, res, next) => {
     // });
     const orderHis = await prisma.orderHistory.create({
       data: {
+        orderIdPK: order.idPK,
         orderId: order.id,
         customerName: order.customerName,
         customerPhone: order.customerPhone,
@@ -904,10 +905,11 @@ const guaranteeOrderDelegate = async (req, res, next) => {
     //   message: "تم استلام الطلب من قبل المندوب: " + order.id,
     // });
     io.emit("refresh", {
-      message: " تم استلام الطلب من قبل المندوب :تحربة" + order.id,
+      message: "تم استلام الطلب من قبل المندوب" + order.id,
     });
     const orderHis = await prisma.orderHistory.create({
       data: {
+        orderIdPK: order.idPK,
         orderId: order.id,
         customerName: order.customerName,
         customerPhone: order.customerPhone,
@@ -995,7 +997,7 @@ const orderDelivered = async (req, res, next) => {
       },
     });
     io.emit("refresh", {
-      message: "تم ايصال الطلب بنجاح تجربة" + order.id,
+      message: "تم ايصال الطلب بنجاح" + order.id,
     });
     if (merchant.fcmToken)
       await sendNofi("تم تسليم الطلب", "تم تسليم الطلب", merchant.fcmToken);
@@ -1110,7 +1112,7 @@ const orderRejected = async (req, res, next) => {
 
     if (merchant.fcmToken)
       await sendNofi(
-        "تم رفض الطلب تجربة",
+        "تم رفض الطلب",
         `تم رفض الطلب رقم${order.id} بسبب ${order.reason}`,
         merchant.fcmToken
       );

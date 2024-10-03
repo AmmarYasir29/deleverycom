@@ -330,8 +330,8 @@ const givenDebt = async (req, res) => {
   });
   if (merchant.fcmToken)
     await sendNofi(
-      "تصفير الحساب تجربة",
-      "تمت معالجة الطلب وبأنتظار التسليم",
+      "تصفير الحساب",
+      "تمت معالجة الطلب- تصفير الرصيد",
       dele.fcmToken
     );
 

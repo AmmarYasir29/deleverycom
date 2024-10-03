@@ -61,7 +61,7 @@ model Order {
 
 model OrderHistory {
   id             Int       @id @default(autoincrement())
-  orderIdPK      Int
+  orderIdPK      Int?
   customerName   String
   customerPhone  String?
   customerPhone2 String?
