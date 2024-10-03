@@ -38,7 +38,7 @@ app.use(auth);
 app.use("/api/merchant", merchantRoute);
 app.use("/api/delegate", delegateRoute);
 app.use("/api/order", orderRoute);
-app.use("/api/ohter", extraRoute);
+app.use("/api/api/ohter", extraRoute);
 io.use(auth.authenticateSocket);
 app.use(errorHandler);
 app.set("socketio", io);
