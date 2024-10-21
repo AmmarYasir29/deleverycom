@@ -1217,6 +1217,7 @@ const processOrder = async (req, res, next) => {
       updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: {
+          orderIdPK: newData.orderIdPK,
           customerName: newData.customerName,
           customerPhone: newData.customerPhone,
           customerPhone2: newData.customerPhone2,
@@ -1236,6 +1237,7 @@ const processOrder = async (req, res, next) => {
       updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: {
+          orderIdPK: newData.orderIdPK,
           customerName: newData.customerName,
           customerPhone: newData.customerPhone,
           customerPhone2: newData.customerPhone2,
@@ -1305,6 +1307,7 @@ const processOrder = async (req, res, next) => {
       updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: {
+          orderIdPK: newData.orderIdPK,
           customerName: newData.customerName,
           customerPhone: newData.customerPhone,
           customerPhone2: newData.customerPhone2,
@@ -1366,6 +1369,7 @@ const processOrder = async (req, res, next) => {
 
     const orderHis = await prisma.orderHistory.create({
       data: {
+        orderIdPK: updatedOrder.orderIdPK,
         orderId: updatedOrder.id,
         customerName: updatedOrder.customerName,
         customerPhone: updatedOrder.customerPhone,
