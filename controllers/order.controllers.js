@@ -186,6 +186,11 @@ const OrdersBasedOnStatus = async (req, res, next) => {
         where: {
           id: orderNumber,
         },
+        orderBy: [
+          {
+            createAt: "desc",
+          },
+        ],
         include: {
           delegate: {
             select: {
@@ -225,9 +230,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             where: {
               delegateId: delegate,
             },
@@ -270,9 +280,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             where: {
               orderStatus: status,
               delegateId: delegate,
@@ -325,9 +340,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              orderStatus: "desc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             where: {
               NOT: {
                 orderStatus: 5,
@@ -373,9 +393,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             where: {
               orderStatus: status,
               merchantId: merchant,
@@ -429,9 +454,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             include: {
               delegate: {
                 select: {
@@ -467,9 +497,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             where: {
               orderStatus: status,
             },
@@ -514,9 +549,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             where: {
               merchantId: merchant,
             },
@@ -559,9 +599,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             where: {
               orderStatus: status,
               merchantId: merchant,
@@ -609,9 +654,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             include: {
               delegate: {
                 select: {
@@ -647,9 +697,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             where: {
               orderStatus: status,
             },
@@ -694,9 +749,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             where: {
               delegateId: delegate,
             },
@@ -739,9 +799,14 @@ const OrdersBasedOnStatus = async (req, res, next) => {
           const orders = await prisma.order.findMany({
             take,
             skip,
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: [
+              {
+                createAt: "desc",
+              },
+              {
+                id: "asc",
+              },
+            ],
             where: {
               orderStatus: status,
               delegateId: delegate,
@@ -1201,6 +1266,7 @@ const processOrder = async (req, res, next) => {
       updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: {
+          orderIdPK: newData.orderIdPK,
           customerName: newData.customerName,
           customerPhone: newData.customerPhone,
           customerPhone2: newData.customerPhone2,
