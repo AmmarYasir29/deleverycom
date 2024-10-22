@@ -916,7 +916,7 @@ const assignOrderDelegate = async (req, res, next) => {
         orderCount: order.orderCount,
         orderStatus: 2,
         notes: order.notes,
-        receiptNum: order.receiptNum,
+        // receiptNum: order.receiptNum,
         merchant: {
           connect: {
             id: order.merchantId,
@@ -988,7 +988,7 @@ const guaranteeOrderDelegate = async (req, res, next) => {
         orderCount: order.orderCount,
         orderStatus: 3,
         notes: order.notes,
-        receiptNum: order.receiptNum,
+        // receiptNum: order.receiptNum,
         reason: order.reason,
         merchant: {
           connect: {
@@ -1083,7 +1083,7 @@ const orderDelivered = async (req, res, next) => {
         orderStatus: 4,
         notes: order.notes,
         reason: order.reason,
-        receiptNum: order.receiptNum,
+        // receiptNum: order.receiptNum,
         merchant: {
           connect: {
             id: order.merchantId,
@@ -1143,7 +1143,8 @@ const orderRejected = async (req, res, next) => {
 
     const orderHis = await prisma.orderHistory.create({
       data: {
-        orderId: order.id,
+        orderIdPK: order.idPK,
+        orderId: order.id, //receiptNum
         customerName: order.customerName,
         customerPhone: order.customerPhone,
         customerPhone2: order.customerPhone2,
@@ -1157,7 +1158,7 @@ const orderRejected = async (req, res, next) => {
         orderStatus: 5,
         notes: order.notes,
         reason: order.reason,
-        receiptNum: order.receiptNum,
+        // receiptNum: order.receiptNum,
         merchant: {
           connect: {
             id: order.merchantId,
@@ -1217,7 +1218,7 @@ const processOrder = async (req, res, next) => {
       updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: {
-          orderIdPK: newData.orderIdPK,
+          // orderIdPK: newData.orderIdPK,
           customerName: newData.customerName,
           customerPhone: newData.customerPhone,
           customerPhone2: newData.customerPhone2,
@@ -1369,8 +1370,7 @@ const processOrder = async (req, res, next) => {
 
     const orderHis = await prisma.orderHistory.create({
       data: {
-        orderIdPK: updatedOrder.orderIdPK,
-        orderId: updatedOrder.id,
+        orderIdPK: updatedOrder.idPK,
         customerName: updatedOrder.customerName,
         customerPhone: updatedOrder.customerPhone,
         customerPhone2: updatedOrder.customerPhone2,
@@ -1384,11 +1384,12 @@ const processOrder = async (req, res, next) => {
         orderStatus: updatedOrder.orderStatus,
         notes: updatedOrder.notes,
         reason: updatedOrder.reason,
-        receiptNum: updatedOrder.receiptNum,
+        orderId: updatedOrder.id,
         merchantId: updatedOrder.merchantId,
         delegateId: updatedOrder.delegateId,
       },
     });
+
     return res.status(200).json(updatedOrder);
   } catch (e) {
     if (e instanceof AppError) {
