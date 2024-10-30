@@ -363,6 +363,47 @@ const showStatements = async (req, res) => {
     },
   });
 };
+const updateMerInfo = async (req, res, next) => {
+  try {
+    if (req.user.role == 1 || req.user.role == 2)
+      throw new AppError("ليس لديك صلاحية", 401, 401);
+
+    if (!req.query.merchantId) throw new AppError("يجب اختيار تاجر", 406, 406);
+    let merchantId = parseInt(req.query.merchantId);
+    const { fullname, phone, pageName, city, area } = req.body;
+
+    const updatedMer = await prisma.merchant.update({
+      where: { id: merchantId },
+      data: {
+        fullname,
+        phone,
+        pageName,
+        city,
+        area,
+      },
+    });
+    return res.json(updatedMer);
+  } catch (e) {
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientInitializationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`);
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    } else if (
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      let msg = e.message.split("Argument");
+      next(new PrismaError(e.name, msg[1], 406, 406));
+    }
+  }
+};
 
 module.exports = {
   createMerchant,
@@ -372,4 +413,5 @@ module.exports = {
   requestDebt,
   showReqDebt,
   givenDebt,
+  updateMerInfo,
 };

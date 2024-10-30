@@ -84,10 +84,24 @@ const getIp = async (req, res) => {
     headerForwared: req.headers["x-forwarded-for"],
   });
 };
+const incDebt = async (req, res) => {
+  const updateMerchant = await prisma.merchant.update({
+    where: {
+      id: 2,
+    },
+    data: {
+      moneyReq: true,
+      debt: 1000,
+    },
+  });
+
+  return res.status(200).json(updateMerchant);
+};
 
 module.exports = {
   auditSys,
   sendNotificaton,
   getIp,
   addEmp,
+  incDebt,
 };

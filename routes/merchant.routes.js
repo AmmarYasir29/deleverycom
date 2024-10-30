@@ -9,5 +9,6 @@ merchantRoute.put("/acceptDebtReq", controllers.givenDebt);
 merchantRoute.get("/displayDebt", controllers.showDebt);
 merchantRoute.get("/displayStatements", controllers.showStatements);
 merchantRoute.put("/requestDebt", controllers.requestDebt);
+merchantRoute.put("/updateMerInfo", controllers.updateMerInfo);
 
 module.exports = merchantRoute;

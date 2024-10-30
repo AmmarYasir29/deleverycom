@@ -4,7 +4,6 @@ const prisma = new PrismaClient();
 const auditMiddleware = async (req, res, next) => {
   const startTime = Date.now();
 
-  // Capture the initial request details and save the log entry
   const logEntry = await prisma.apiAuditLog.create({
     data: {
       method: req.method,
