@@ -104,10 +104,9 @@ const create = async (req, res, next) => {
   }
 };
 
-const getOrder = async (req, res) => {
-  if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
-
+const getOrder = async (req, res, next) => {
   try {
+    if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
     const delegate = await prisma.delegate.findUnique({
       where: {
         id: req.user.id,
@@ -141,7 +140,7 @@ const getOrder = async (req, res) => {
         },
       },
     });
-    if (!order) return res.json([]);
+    if (!order) throw new AppError("رقم الطلب غير موجود", 404, 404);
     else if (delegate.id == order.delegateId) return res.json(order);
     else throw new AppError("ليس لديك صلاحية", 401, 401);
   } catch (e) {
@@ -959,23 +958,23 @@ const takedOrder = async (req, res, next) => {
   // let delegateId = parseInt(req.query.delegateId);
   let orderId = parseInt(req.query.orderId);
   const io = req.app.get("socketio");
-
   try {
     if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
     let delegateId = req.user.id;
     const order = await prisma.order.update({
       where: {
-        AND: [
-          { id: orderId },
-          {
-            OR: [
-              { orderStatus: 1 },
-              { orderStatus: 3 },
-              { orderStatus: 6 },
-              { orderStatus: 5 },
-            ],
-          },
-        ],
+        id: orderId,
+        // AND: [
+        // { id: orderId },
+        // {
+        //   OR: [
+        //     { orderStatus: 1 },
+        //     { orderStatus: 3 },
+        //     { orderStatus: 6 },
+        //     { orderStatus: 5 },
+        //   ],
+        // },
+        // ],
       },
 
       data: {
@@ -983,15 +982,17 @@ const takedOrder = async (req, res, next) => {
         orderStatus: 3,
       },
     });
-    // const dele = await prisma.delegate.findUnique({
-    //   where: { id: order.delegateId },
-    // });
-    // if (dele.fcmToken)
-    //   await sendNofi(
-    //     "عهدة المندوب",
-    //     "لديك طلب يحتاج الى استلام",
-    //     dele.fcmToken
+
+    // if (
+    //   order.orderStatus != 1 &&
+    //   order.orderStatus != 3 &&
+    //   order.orderStatus != 6 &&
+    //   order.orderStatus != 5
+    // )
+    //   throw new AppError(
+    //     "الطلب ليس في الحالة الصحي يتم الاستلام اما قيد التحضير او عهدة المندوب او تم ارجاعة او مرفوض"
     //   );
+
     io.emit("refresh", {
       message: "تم استلام طلب جديد من قبل المندوب: " + order.id,
     });

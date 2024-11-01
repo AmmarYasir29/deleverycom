@@ -332,10 +332,10 @@ const givenDebt = async (req, res) => {
     await sendNofi(
       "تصفير الحساب",
       "تمت معالجة الطلب- تصفير الرصيد",
-      dele.fcmToken
+      merchant.fcmToken
     );
 
-  res.json({ message: "تم تصفير الرصيد" });
+  res.status(200).json({ message: "تم تصفير الرصيد" });
 };
 const showStatements = async (req, res) => {
   const take = parseInt(req.query.PAGE_SIZE) || 25;
