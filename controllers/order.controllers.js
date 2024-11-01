@@ -881,8 +881,11 @@ const assignOrderDelegate = async (req, res, next) => {
   try {
     if (req.user.role == 1 || req.user.role == 2)
       throw new AppError("ليس لديك صلاحية", 401, 401);
+
     const order = await prisma.order.update({
-      where: { id: orderId },
+      where: {
+        AND: [{ id: orderId }, { orderStatus: 1 }],
+      },
       data: {
         delegateId: delegateId,
         orderStatus: 2,
@@ -952,6 +955,98 @@ const assignOrderDelegate = async (req, res, next) => {
     }
   }
 };
+const takedOrder = async (req, res, next) => {
+  // let delegateId = parseInt(req.query.delegateId);
+  let orderId = parseInt(req.query.orderId);
+  const io = req.app.get("socketio");
+
+  try {
+    if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
+    let delegateId = req.user.id;
+    const order = await prisma.order.update({
+      where: {
+        AND: [
+          { id: orderId },
+          {
+            OR: [
+              { orderStatus: 1 },
+              { orderStatus: 3 },
+              { orderStatus: 6 },
+              { orderStatus: 5 },
+            ],
+          },
+        ],
+      },
+
+      data: {
+        delegateId: delegateId,
+        orderStatus: 3,
+      },
+    });
+    // const dele = await prisma.delegate.findUnique({
+    //   where: { id: order.delegateId },
+    // });
+    // if (dele.fcmToken)
+    //   await sendNofi(
+    //     "عهدة المندوب",
+    //     "لديك طلب يحتاج الى استلام",
+    //     dele.fcmToken
+    //   );
+    io.emit("refresh", {
+      message: "تم استلام طلب جديد من قبل المندوب: " + order.id,
+    });
+    const orderHis = await prisma.orderHistory.create({
+      data: {
+        orderIdPK: order.idPK,
+        orderId: order.id,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        customerPhone2: order.customerPhone2,
+        customerLat: order.customerLat,
+        customerLong: order.customerLong,
+        city: order.city,
+        area: order.area,
+        nearestPoint: order.nearestPoint,
+        orderAmount: order.orderAmount,
+        orderCount: order.orderCount,
+        orderStatus: 3,
+        notes: order.notes,
+        // receiptNum: order.receiptNum,
+        merchant: {
+          connect: {
+            id: order.merchantId,
+          },
+        },
+        delegate: {
+          connect: {
+            id: delegateId,
+          },
+        },
+      },
+    });
+
+    res.status(200).json(order);
+  } catch (e) {
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientInitializationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`);
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    } else if (
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      let msg = e.message.split("Argument");
+      next(new PrismaError(e.name, msg[1], 406, 406));
+    }
+  }
+};
 
 const guaranteeOrderDelegate = async (req, res, next) => {
   let orderId = parseInt(req.query.orderId);
@@ -961,7 +1056,15 @@ const guaranteeOrderDelegate = async (req, res, next) => {
       throw new AppError("ليس لديك صلاحية الاستلام", 401, 401);
 
     const order = await prisma.order.update({
-      where: { id: orderId },
+      where: {
+        AND: [
+          { id: orderId },
+          {
+            OR: [{ orderStatus: 2 }, { orderStatus: 6 }, { orderStatus: 5 }],
+          },
+        ],
+      },
+
       data: {
         orderStatus: 3,
       },
@@ -1039,7 +1142,9 @@ const orderDelivered = async (req, res, next) => {
       throw new AppError("الطلب تم ايصاله مسبقا", 406, 406);
 
     const order = await prisma.order.update({
-      where: { id: orderId },
+      where: {
+        AND: [{ id: orderId }, { orderStatus: 3 }],
+      },
       data: {
         orderStatus: 4,
       },
@@ -1098,8 +1203,6 @@ const orderDelivered = async (req, res, next) => {
     });
     res.status(200).json({ order, merchant });
   } catch (e) {
-    console.log(e);
-
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
     } else if (
@@ -1131,7 +1234,9 @@ const orderRejected = async (req, res, next) => {
 
     if (!reason) throw new AppError("يجب اختيار سبب", 406, 406);
     const order = await prisma.order.update({
-      where: { id: orderId },
+      where: {
+        AND: [{ id: orderId }, { orderStatus: 3 }],
+      },
       data: {
         orderStatus: 5,
         reason,
@@ -1508,7 +1613,9 @@ const orderReverted = async (req, res) => {
     if (req.user.role != 3) throw new AppError("ليس لديك صلاحية", 401, 401);
 
     const order = await prisma.order.update({
-      where: { id: orderId },
+      where: {
+        AND: [{ id: orderId }, { orderStatus: 4 }],
+      },
       data: {
         orderStatus: 6,
       },
@@ -1542,7 +1649,7 @@ const orderReverted = async (req, res) => {
         },
       },
     });
-    res.json(order);
+    res.status(200).json(order);
   } catch (e) {
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
@@ -1617,7 +1724,6 @@ const editOrderMer = async (req, res) => {
     if (req.user.role != 1) throw new AppError("ليس لديك صلاحية", 401, 401);
 
     if (!req.query.orderId) throw new AppError("يجب اختيار طلب", 406, 406);
-
     let orderId = parseInt(req.query.orderId);
     const {
       // customerName = "",
@@ -1640,7 +1746,7 @@ const editOrderMer = async (req, res) => {
         city,
         area,
         nearestPoint,
-        orderStatus: 3,
+        // orderStatus: 3,
       },
     });
     const dele = await prisma.delegate.findUnique({
@@ -1785,5 +1891,6 @@ module.exports = {
   orderHistory,
   editOrderMer,
   addReceiptNum,
+  takedOrder,
   // editOrderAdmin,
 };

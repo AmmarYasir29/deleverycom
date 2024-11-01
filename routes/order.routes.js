@@ -3,18 +3,19 @@ const orderRoute = express.Router();
 const controllers = require("../controllers/order.controllers");
 
 orderRoute.post("/create", controllers.create);
-// orderRoute.get("/displayAll", controllers.showOrders);
-orderRoute.get("/orderStatus", controllers.OrdersBasedOnStatus);
+orderRoute.put("/taked", controllers.takedOrder);
 orderRoute.put("/assignDelegate", controllers.assignOrderDelegate);
-orderRoute.put("/processOrder", controllers.processOrder);
 orderRoute.put("/guaranteeDelegate", controllers.guaranteeOrderDelegate);
-orderRoute.put("/rejected", controllers.orderRejected);
 orderRoute.put("/delivered", controllers.orderDelivered);
+orderRoute.put("/rejected", controllers.orderRejected);
+// orderRoute.put("/revert", controllers.orderReverted);
+orderRoute.put("/processOrder", controllers.processOrder);
+// orderRoute.put("/receiptNum", controllers.addReceiptNum);
 orderRoute.put("/marEditOrder", controllers.editOrderMer);
-orderRoute.put("/revert", controllers.orderReverted);
-orderRoute.get("/getOrder", controllers.getOrder);
 orderRoute.get("/orderHis", controllers.orderHistory);
-orderRoute.put("/receiptNum", controllers.addReceiptNum);
+orderRoute.get("/getOrder", controllers.getOrder);
+orderRoute.get("/orderStatus", controllers.OrdersBasedOnStatus);
 // orderRoute.put("/editOrderAdmin", controllers.editOrderAdmin);
+// orderRoute.get("/displayAll", controllers.showOrders);
 
 module.exports = orderRoute;
