@@ -106,7 +106,7 @@ const create = async (req, res, next) => {
 
 const getOrder = async (req, res, next) => {
   try {
-    // if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
+    if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
     const delegate = await prisma.delegate.findUnique({
       where: {
         id: req.user.id,
@@ -141,8 +141,9 @@ const getOrder = async (req, res, next) => {
       },
     });
     if (!order) throw new AppError("رقم الطلب غير موجود", 404, 404);
-    else if (delegate.id == order.delegateId) return res.json(order);
-    else throw new AppError("ليس لديك صلاحية", 401, 401);
+    // else if (delegate.id == order.delegateId)
+    else return res.json(order);
+    // throw new AppError("ليس لديك صلاحية", 401, 401);
   } catch (e) {
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
