@@ -1143,9 +1143,12 @@ const orderDelivered = async (req, res, next) => {
     if (curOrder.orderStatus == 4)
       throw new AppError("الطلب تم ايصاله مسبقا", 406, 406);
 
+    if (curOrder.orderStatus != 3)
+      throw new AppError("لا يمكن تسليم طلب حالة غير صحيحة", 406, 406);
     const order = await prisma.order.update({
       where: {
-        AND: [{ id: orderId }, { orderStatus: 3 }],
+        // AND: [{ id: orderId }, { orderStatus: 3 }],
+        id: orderId,
       },
       data: {
         orderStatus: 4,
@@ -1205,6 +1208,8 @@ const orderDelivered = async (req, res, next) => {
     });
     res.status(200).json({ order, merchant });
   } catch (e) {
+    console.log(e);
+
     if (e instanceof AppError) {
       next(new AppError("Validation Error", e.name, e.code, e.errorCode));
     } else if (
@@ -1237,7 +1242,8 @@ const orderRejected = async (req, res, next) => {
     if (!reason) throw new AppError("يجب اختيار سبب", 406, 406);
     const order = await prisma.order.update({
       where: {
-        AND: [{ id: orderId }, { orderStatus: 3 }],
+        id: orderId,
+        // AND: [{ id: orderId }, { orderStatus: 3 }],
       },
       data: {
         orderStatus: 5,
