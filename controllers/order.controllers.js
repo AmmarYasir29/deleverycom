@@ -962,37 +962,33 @@ const takedOrder = async (req, res, next) => {
   try {
     if (req.user.role != 2) throw new AppError("ليس لديك صلاحية", 401, 401);
     let delegateId = req.user.id;
+    const originOrder = await prisma.order.findUnique({
+      where: {
+        id: orderId,
+      },
+    });
+
+    if (!originOrder) {
+      throw new AppError("الطلب غير موجود", 404, 404);
+    }
+
+    if (![1, 3, 5].includes(originOrder.orderStatus)) {
+      throw new AppError(
+        "الطلب ليس في الحالة الصحي يتم الاستلام اما قيد التحضير او عهدة المندوب او مرفوض",
+        406,
+        406
+      );
+    }
+
     const order = await prisma.order.update({
       where: {
         id: orderId,
-        // AND: [
-        // { id: orderId },
-        // {
-        //   OR: [
-        //     { orderStatus: 1 },
-        //     { orderStatus: 3 },
-        //     { orderStatus: 6 },
-        //     { orderStatus: 5 },
-        //   ],
-        // },
-        // ],
       },
-
       data: {
         delegateId: delegateId,
         orderStatus: 3,
       },
     });
-
-    // if (
-    //   order.orderStatus != 1 &&
-    //   order.orderStatus != 3 &&
-    //   order.orderStatus != 6 &&
-    //   order.orderStatus != 5
-    // )
-    //   throw new AppError(
-    //     "الطلب ليس في الحالة الصحي يتم الاستلام اما قيد التحضير او عهدة المندوب او تم ارجاعة او مرفوض"
-    //   );
 
     io.emit("refresh", {
       message: "تم استلام طلب جديد من قبل المندوب: " + order.id,
