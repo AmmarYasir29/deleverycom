@@ -1153,12 +1153,14 @@ const orderDelivered = async (req, res, next) => {
     const merchant = await prisma.merchant.update({
       where: { id: order.merchantId },
       data: {
-        debt: { increment: order.orderAmount * order.orderCount },
+        // debt: { increment: order.orderAmount * order.orderCount },
+        debt: { increment: order.orderAmount },
       },
     });
     const invoice = await prisma.invoice.create({
       data: {
-        amount: order.orderAmount * order.orderCount,
+        // amount: order.orderAmount * order.orderCount,
+        amount: order.orderAmount,
         type: 1,
         merchant: {
           connect: {
@@ -1455,13 +1457,15 @@ const processOrder = async (req, res, next) => {
         where: { id: updatedOrder.merchantId },
         data: {
           debt: {
-            increment: -(updatedOrder.orderAmount * updatedOrder.orderCount),
+            // increment: -(updatedOrder.orderAmount * updatedOrder.orderCount),
+            increment: -updatedOrder.orderAmount,
           },
         },
       });
       const invoice = await prisma.invoice.create({
         data: {
-          amount: updatedOrder.orderAmount * updatedOrder.orderCount,
+          // amount: updatedOrder.orderAmount * updatedOrder.orderCount,
+          amount: updatedOrder.orderAmount,
           type: 3,
           merchant: {
             connect: {
