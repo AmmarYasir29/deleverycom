@@ -34,7 +34,6 @@ const login = async (req, res, next) => {
       user = await prisma.super.findUnique({
         where: { username },
       });
-
       if (!user) throw new AppError("حساب الموظف غير موجود", 404, 400);
       if (user.type == 3) role = 3; // admin
       else if (user.type == 4) role = 4; //emp

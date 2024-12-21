@@ -405,6 +405,41 @@ const updateMerInfo = async (req, res, next) => {
   }
 };
 
+const debtHistory = async (req, res) => {
+  try {
+    if (req.user.role != 3) throw new AppError("ليس لديك صلاحية", 401, 401);
+    if (!req.query.merchantId) throw new AppError("يجب اختيار تاجر", 406, 406);
+
+    let merchantId = parseInt(req.query.merchantId);
+
+    const MerInvoiceHis = await prisma.Invoice.findMany({
+      where: {
+        merchantId,
+      },
+    });
+    return res.status(200).json(MerInvoiceHis);
+  } catch (e) {
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientInitializationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`);
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    } else if (
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      let msg = e.message.split("Argument");
+      next(new PrismaError(e.name, msg[1], 406, 406));
+    }
+  }
+};
+
 module.exports = {
   createMerchant,
   showMerchants,
@@ -414,4 +449,5 @@ module.exports = {
   showReqDebt,
   givenDebt,
   updateMerInfo,
+  debtHistory,
 };
