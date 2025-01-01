@@ -8,7 +8,7 @@ const errorCode = require("../helper/errorCode");
 
 const createMerchant = async (req, res, next) => {
   const {
-    fullname = "",
+    fullname = "1", // Active 1 || Deleted 0
     username,
     password,
     phone,
@@ -440,6 +440,67 @@ const debtHistory = async (req, res) => {
   }
 };
 
+const resetpassword = async (req, res, next) => {
+  try {
+    const { password, merchantId } = req.body;
+    // let delegateId = parseInt(req.query.id);
+    if (req.user.role == 1 || req.user.role == 2)
+      throw new AppError("ليس لديك صلاحية", 401, 401);
+
+    const salt = await bcrypt.genSalt(10);
+    const cryptPassword = await bcrypt.hash(password, salt);
+
+    const merPass = await prisma.merchant.update({
+      where: { id: merchantId },
+      data: {
+        password: cryptPassword,
+      },
+    });
+
+    res.status(200).json("تم تحديث الرقم السري بنجاح");
+  } catch (e) {
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientInitializationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`);
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    } else if (
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      let msg = e.message.split("Argument");
+      next(new PrismaError(e.name, msg[1], 406, 406));
+    }
+  }
+};
+
+const deleteMer = async (req, res) => {
+  const merchantId = parseInt(req.query.merchantId);
+  // req.user.role == 1 ? req.user.id : parseInt(req.query.merchantId);
+  const io = req.app.get("socketio");
+
+  const updateMerchant = await prisma.merchant.update({
+    where: {
+      id: merchantId,
+    },
+    data: {
+      fullname: "0",
+    },
+  });
+  // if (req.user.role == 3)
+  io.emit("deleted", {
+    message: "تم ارشفت التاجر",
+  });
+
+  res.json({ message: `تم ارشفت التاجر ${updateMerchant.pageName} بنجاح` });
+};
+
 module.exports = {
   createMerchant,
   showMerchants,
@@ -450,4 +511,6 @@ module.exports = {
   givenDebt,
   updateMerInfo,
   debtHistory,
+  resetpassword,
+  deleteMer,
 };
