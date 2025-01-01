@@ -971,10 +971,10 @@ const takedOrder = async (req, res, next) => {
     if (!originOrder) {
       throw new AppError("الطلب غير موجود", 404, 404);
     }
-
+    let oldDelegate = originOrder.delegateId;
     if (![1, 3, 5].includes(originOrder.orderStatus)) {
       throw new AppError(
-        "الطلب ليس في الحالة الصحي يتم الاستلام اما قيد التحضير او عهدة المندوب او مرفوض",
+        "الطلب ليس في الحالة الصحيحة يتم الاستلام اما قيد التحضير او عهدة المندوب او مرفوض",
         406,
         406
       );
@@ -989,10 +989,20 @@ const takedOrder = async (req, res, next) => {
         orderStatus: 3,
       },
     });
-
     io.emit("refresh", {
       message: "تم استلام طلب جديد من قبل المندوب: " + order.id,
     });
+
+    const dele = await prisma.delegate.findUnique({
+      where: { id: oldDelegate },
+    });
+    if (dele.fcmToken)
+      await sendNofi(
+        "عهدة المندوب",
+        "تم استلام الطلب من قبل المندوب اخر:",
+        dele.fcmToken
+      );
+
     const orderHis = await prisma.orderHistory.create({
       data: {
         orderIdPK: order.idPK,
