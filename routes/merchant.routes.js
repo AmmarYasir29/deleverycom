@@ -11,7 +11,7 @@ merchantRoute.get("/displayAllDebt", controllers.showReqDebt); // display who re
 merchantRoute.put("/acceptDebtReq", controllers.givenDebt); // accept the request for the debt
 merchantRoute.put("/updateMerInfo", controllers.updateMerInfo);
 merchantRoute.get("/debtHistory", controllers.debtHistory);
-delegateRoute.put("/resetPassword", controllers.resetpassword);
-delegateRoute.put("/deletedMer", controllers.deleteMer);
+merchantRoute.put("/resetPassword", controllers.resetpassword);
+merchantRoute.put("/deletedMer", controllers.deleteMer);
 
 module.exports = merchantRoute;
