@@ -15,6 +15,7 @@ orderRoute.put("/marEditOrder", controllers.editOrderMer);
 orderRoute.get("/orderHis", controllers.orderHistory);
 orderRoute.get("/getOrder", controllers.getOrder);
 orderRoute.get("/orderStatus", controllers.OrdersBasedOnStatus);
+orderRoute.get("/searchpage", controllers.srchMrch);
 // orderRoute.put("/editOrderAdmin", controllers.editOrderAdmin);
 // orderRoute.get("/displayAll", controllers.showOrders);
 

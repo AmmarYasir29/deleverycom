@@ -1896,6 +1896,85 @@ const addReceiptNum = async (req, res, next) => {
   }
 };
 
+const srchMrch = async (req, res, next) => {
+  const take = parseInt(req.query.PAGE_SIZE) || 25;
+  const pageNumber = parseInt(req.query.pageNumber) || 0;
+  const skip = (pageNumber - 1) * take;
+  try {
+    if (req.user.role == 3 || req.user.role == 4) {
+      merchant = parseInt(req.query.orderMerchant); // super admin
+    } else throw new AppError("ليس لديك صلاحية", 401, 401);
+    const orders = await prisma.order.findMany({
+      take,
+      skip,
+      orderBy: [
+        {
+          createAt: "desc",
+        },
+        {
+          id: "asc",
+        },
+      ],
+      where: {
+        merchantId: merchant,
+      },
+      include: {
+        delegate: {
+          select: {
+            fullname: true,
+            username: true,
+            phone: true,
+            city: true,
+            area: true,
+          },
+        },
+        merchant: {
+          select: {
+            fullname: true,
+            username: true,
+            phone: true,
+            pageName: true,
+            city: true,
+            area: true,
+          },
+        },
+      },
+    });
+    const total = await prisma.order.count({
+      where: {
+        merchantId: merchant,
+      },
+    });
+
+    return res.json({
+      data: orders || [],
+      metadata: {
+        hasNextPage: skip + take < total,
+        totalPages: Math.ceil(total / take),
+      },
+    });
+  } catch (e) {
+    if (e instanceof AppError) {
+      next(new AppError("Validation Error", e.name, e.code, e.errorCode));
+    } else if (
+      e instanceof Prisma.PrismaClientKnownRequestError ||
+      e instanceof Prisma.PrismaClientInitializationError
+    ) {
+      let msg = errorCode(`${e.code || e.errorCode}`);
+      next(
+        new PrismaError(e.name, msg, 400, (errCode = e.code || e.errorCode))
+      );
+    } else if (
+      e instanceof Prisma.PrismaClientUnknownRequestError ||
+      e instanceof Prisma.PrismaClientRustPanicError ||
+      e instanceof Prisma.PrismaClientValidationError
+    ) {
+      let msg = e.message.split("Argument");
+      next(new PrismaError(e.name, msg[1], 406, 406));
+    }
+  }
+};
+
 module.exports = {
   create,
   getOrder,
@@ -1910,5 +1989,6 @@ module.exports = {
   editOrderMer,
   addReceiptNum,
   takedOrder,
+  srchMrch,
   // editOrderAdmin,
 };
